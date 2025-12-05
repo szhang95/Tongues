@@ -5,21 +5,10 @@
     <title>Tongues Arbitrage Monitor</title>
     <link rel="stylesheet" href="/static/style.css"/>
 </head>
+
 <body>
 
 <h1>Real-time Arbitrage Monitor</h1>
-
-<div id="container"><!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8"/>
-    <title>Tongues Arbitrage Monitor</title>
-    <link rel="stylesheet" href="/static/style.css"/>
-</head>
-<body>
-
-<h1>Real-time Arbitrage Monitor</h1>
-
 <div id="container"></div>
 
 <script>
@@ -27,143 +16,35 @@ async function loadData() {
     const res = await fetch("/api/monitor");
     const data = await res.json();
 
-    const container = document.getElementById("container");
-    container.innerHTML = "";
+    const root = document.getElementById("container");
+    root.innerHTML = "";
 
     (data.symbols || []).forEach(sym => {
-        const div = document.createElement("div");
-        div.className = "box";
+        const box = document.createElement("div");
+        box.className = "box";
 
-        div.innerHTML += `<h2>${sym.symbol}</h2>`;
+        box.innerHTML += `<h2>${sym.symbol}</h2>`;
 
-        // --- signals ---
-        if (!sym.signals || sym.signals.length === 0) {
-            div.innerHTML += `<p>No arbitrage signals.</p>`;
-        } else {
-            div.innerHTML += `<ul>` +
-                sym.signals.map(s =>
-                    `<li><b>${s.signal}</b> @ Strike ${s.strike}
-                    (Expiry: ${s.expiry_date}, ${s.days_to_expiry} days, r=${s.implied_r.toFixed(4)})</li>`
-                ).join("") +
-                `</ul>`;
+        if (sym.error) {
+            box.innerHTML += `<p style="color:red;">Worker error: ${sym.error}</p>`;
+            root.appendChild(box);
+            return;
         }
 
-        // --- collapsible full table ---
-        const btn = document.createElement("button");
-        btn.innerText = "Show full table";
-        btn.className = "toggleBtn";
+        if (!sym.signals || sym.signals.length === 0) {
+            box.innerHTML += `<p>No arbitrage signals.</p>`;
+        } else {
+            const ul = sym.signals.map(s =>
+                `<li><b>${s.signal}</b> @ Strike ${s.strike} (r=${s.implied_r.toFixed(4)})</li>`
+            ).join("");
+            box.innerHTML += `<ul>${ul}</ul>`;
+        }
 
-        const tableDiv = document.createElement("div");
-        tableDiv.style.display = "none";
-
-        let tableHTML = `<table>
-            <tr>
-                <th>Strike</th>
-                <th>Expiry Date</th>
-                <th>Days to Expiry</th>
-                <th>Call Mid</th>
-                <th>Put Mid</th>
-                <th>Implied r</th>
-                <th>Signal</th>
-            </tr>`;
-
-        (sym.rows || []).forEach(r => {
-            tableHTML += `<tr>
-                <td>${r.strike}</td>
-                <td>${r.expiry_date || "-"}</td>
-                <td>${r.days_to_expiry || "-"}</td>
-                <td>${r.call_mid ? r.call_mid.toFixed(2) : "-"}</td>
-                <td>${r.put_mid ? r.put_mid.toFixed(2) : "-"}</td>
-                <td>${r.implied_r != null ? r.implied_r.toFixed(5) : "-"}</td>
-                <td>${r.signal ?? ""}</td>
-            </tr>`;
-        });
-
-        tableHTML += "</table>";
-        tableDiv.innerHTML = tableHTML;
-
-        btn.onclick = () => {
-            tableDiv.style.display =
-                tableDiv.style.display === "none" ? "block" : "none";
-        };
-
-        div.appendChild(btn);
-        div.appendChild(tableDiv);
-
-        container.appendChild(div);
+        root.appendChild(box);
     });
 }
 
 loadData();
-// refresh every 5 seconds
-setInterval(loadData, 5000);
-</script>
-
-</body>
-</html></div>
-
-<script>
-async function loadData() {
-    const res = await fetch("/api/monitor");
-    const data = await res.json();
-
-    const container = document.getElementById("container");
-    container.innerHTML = "";
-
-    (data.symbols || []).forEach(sym => {
-        const div = document.createElement("div");
-        div.className = "box";
-
-        div.innerHTML += `<h2>${sym.symbol}</h2>`;
-
-        // --- signals ---
-        if (!sym.signals || sym.signals.length === 0) {
-            div.innerHTML += `<p>No arbitrage signals.</p>`;
-        } else {
-            div.innerHTML += `<ul>` +
-                sym.signals.map(s =>
-                    `<li><b>${s.signal}</b> @ Strike ${s.strike} (r=${s.implied_r.toFixed(4)})</li>`
-                ).join("") +
-                `</ul>`;
-        }
-
-        // --- collapsible full table ---
-        const btn = document.createElement("button");
-        btn.innerText = "Show full table";
-        btn.className = "toggleBtn";
-
-        const tableDiv = document.createElement("div");
-        tableDiv.style.display = "none";
-
-        let tableHTML = "<table><tr><th>Strike</th><th>Call Mid</th><th>Put Mid</th><th>Implied r</th><th>Signal</th></tr>";
-
-        (sym.rows || []).forEach(r => {
-            tableHTML += `<tr>
-                <td>${r.strike}</td>
-                <td>${r.call_mid}</td>
-                <td>${r.put_mid}</td>
-                <td>${r.implied_r != null ? r.implied_r.toFixed(5) : "-"}</td>
-                <td>${r.signal ?? ""}</td>
-            </tr>`;
-        });
-
-        tableHTML += "</table>";
-        tableDiv.innerHTML = tableHTML;
-
-        btn.onclick = () => {
-            tableDiv.style.display =
-                tableDiv.style.display === "none" ? "block" : "none";
-        };
-
-        div.appendChild(btn);
-        div.appendChild(tableDiv);
-
-        container.appendChild(div);
-    });
-}
-
-loadData();
-// refresh every 5 seconds
 setInterval(loadData, 5000);
 </script>
 

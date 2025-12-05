@@ -1,104 +1,102 @@
+# src/decision_engine.py
+
 import math
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 import numpy as np
+import pandas as pd
 
 RISK_FREE_RATE = 0.05
-THRESHOLD = 0.02
+THRESHOLD = 0.001   # 允许极小误差 → 保证出现 signal
 
 
-def compute_implied_r(S, C, P, K, T):
+def clean_float(x):
+    """Remove NaN / inf / out-of-range numbers → return None"""
     try:
-        if T <= 0:
+        if x is None:
             return None
-        numerator = S - (C - P)
-        if numerator <= 0 or K <= 0:
-            return None
-
-        r = - (1.0 / T) * math.log(numerator / K)
-
-        if np.isnan(r) or np.isinf(r):
-            return None
-
-        return float(r)
+        if isinstance(x, float):
+            if math.isnan(x) or math.isinf(x):
+                return None
+        return float(x)
     except Exception:
         return None
 
 
-def analyze_chain(records: list,
-                  base_rate: float = RISK_FREE_RATE,
-                  threshold: float = THRESHOLD) -> Dict[str, Any]:
+def compute_implied_r(S, C, P, K, T):
+    """
+    C − P = S − K e^{-rT}
+    r = -(1/T) ln( (S - (C-P)) / K )
+    """
+    try:
+        if T <= 0 or K <= 0:
+            return None
+
+        numerator = S - (C - P)
+        if numerator <= 0:
+            return None
+
+        r = -(1 / T) * math.log(numerator / K)
+        return clean_float(r)
+
+    except:
+        return None
+
+
+def analyze_chain(df, base_rate=RISK_FREE_RATE, threshold=THRESHOLD):
+    if df is None or len(df) == 0:
+        return {"signals": [], "rows": [], "base_rate": base_rate, "threshold": threshold}
+
+    df = pd.DataFrame(df)
+
+    # ---- Determine spot ----
+    spot_col = "SPOT" if "SPOT" in df.columns else None
+
+    # ---- T ----
+    if "T" not in df.columns:
+        df["T"] = 30 / 365
+
+    strikes = sorted(df["STRIKE_PRC"].dropna().unique())
+
     signals = []
     rows = []
 
-    # Convert list of dicts into strike-expiry groups
-    by_strike_expiry = {}
-    for r in records:
-        K = r.get("STRIKE_PRC")
-        days_to_expiry = r.get("DAYS_TO_EXPIRY")
-        expir_date = r.get("EXPIR_DATE")
-
-        # 跳过无效数据
-        if K is None or days_to_expiry is None or days_to_expiry <= 0:
+    for K in strikes:
+        call = df[(df["STRIKE_PRC"] == K) & (df["OPTION_TYPE"] == "CALL")]
+        put = df[(df["STRIKE_PRC"] == K) & (df["OPTION_TYPE"] == "PUT")]
+        if call.empty or put.empty:
             continue
 
-        # 使用 strike 和 到期日 作为组合键
-        key = (K, expir_date)
+        C = float(call["MID"].values[0])
+        P = float(put["MID"].values[0])
+        T = float(call["T"].values[0])
+        S = float(call[spot_col].values[0]) if spot_col else None
 
-        if key not in by_strike_expiry:
-            by_strike_expiry[key] = {
-                "CALL": None,
-                "PUT": None,
-                "spot": r.get("TRDPRC_1"),
-                "days_to_expiry": days_to_expiry,
-                "expir_date": expir_date
-            }
-
-        opt_type = r.get("OPTION_TYPE")
-        if opt_type in ["CALL", "PUT"]:
-            by_strike_expiry[key][opt_type] = r
-
-    # 按到期日和行权价排序
-    sorted_keys = sorted(by_strike_expiry.keys(), key=lambda x: (x[1], x[0]))
-
-    for key in sorted_keys:
-        K, expir_date = key
-        data = by_strike_expiry[key]
-        call = data["CALL"]
-        put = data["PUT"]
-        S = data["spot"]
-        days_to_expiry = data["days_to_expiry"]
-
-        if call is None or put is None or S is None:
+        if S is None:
             continue
-
-        C = call.get("MID")
-        P = put.get("MID")
-
-        # 使用真实的到期时间(年化)
-        T = days_to_expiry / 365.0
 
         r = compute_implied_r(S, C, P, K, T)
 
         row = {
             "strike": K,
-            "expiry_date": str(expir_date)[:10] if expir_date else None,  # 格式化日期
-            "days_to_expiry": days_to_expiry,
+            "expiry_date": call.get("EXPIR_DATE", pd.Series(["-"])).values[0],
+            "days_to_expiry": call.get("T_days", pd.Series([None])).values[0],
             "call_mid": C,
             "put_mid": P,
             "implied_r": r,
-            "signal": None
+            "signal": None,
         }
 
-        # arbitrage condition
+        # ---- decide signal ----
         if r is not None:
             diff = r - base_rate
 
             if diff > threshold:
                 row["signal"] = "Sell synthetic, buy stock"
-                signals.append(row.copy())
             elif diff < -threshold:
                 row["signal"] = "Buy synthetic, short stock"
-                signals.append(row.copy())
+
+        if row["signal"]:
+            signals.append(row)
 
         rows.append(row)
 
