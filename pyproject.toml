@@ -1,0 +1,36 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "deviltongues"
+version = "0.0.1"
+description = "Track and view options and vol information from LSEG"
+readme = "README.md"
+requires-python = ">=3.12, <3.13"
+license = "MIT"
+authors = [
+    { name = "Jake Vestal", email = "jmv13@duke.edu" },
+]
+keywords = ["arbitrage", "options", "LSEG"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.12",
+]
+
+dependencies = [
+    "shiny"
+]
+
+[project.urls]
+Homepage = "https://http://deviltongues.website/"
+Documentation = "https://deviltongues.website/"
+Repository = ""
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/deviltongues"]
