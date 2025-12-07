@@ -45,13 +45,13 @@ app_ui = ui.page_fillable(
 
 def server(input, output, session):
     rd.open_session()
+    session.on_ended(rd.close_session)
 
     @render.data_frame
     def strikes_and_expiries():
         # Create a sample dataframe
         strikes_and_expiries_df = rd.discovery.search(
             view=rd.discovery.Views.EQUITY_QUOTES,
-            query="msft",
             top=10,
             filter="( SearchAllCategoryv2 eq 'Options' and "
                    "(ExpiryDate gt 2025-12-06 and ExpiryDate lt 2026-01-31 and "
@@ -62,7 +62,6 @@ def server(input, output, session):
         )
         return strikes_and_expiries_df
 
-    # rd.close_session()
 
 app = App(app_ui, server)
 app.run()
