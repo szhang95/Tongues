@@ -1,6 +1,4 @@
 import refinitiv.data as rd
-from refinitiv.data.discovery import Chain
-from refinitiv.data.content import search
 import pandas as pd
 
 
