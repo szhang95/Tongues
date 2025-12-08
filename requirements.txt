@@ -1,0 +1,8 @@
+fastapi==0.115.*
+uvicorn[standard]==0.30.*
+pandas>=2.0
+numpy>=1.26
+requests>=2.31
+python-dotenv>=1.0
+# 如需 LSEG Eikon 再打开下一行
+# eikon>=1.1
