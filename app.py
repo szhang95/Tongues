@@ -5,31 +5,52 @@ from datetime import datetime
 
 app_ui = ui.page_fillable(
     ui.tags.head(
-        ui.tags.link(rel="stylesheet",
-                     href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap")
+        ui.tags.link(
+            rel="stylesheet",
+            href="https://fonts.googleapis.com/"
+                 "css2?family=Inter:wght@400;500;600;700&display=swap"
+        )
     ),
 
     ui.div(
-        {"class": "container-fluid", "style": "max-width: 1800px; margin: 0 auto;"},
+        {
+            "class": "container-fluid",
+            "style": "max-width: 1800px; margin: 0 auto;"
+        },
 
         # 顶部导航栏
         ui.div(
             {"class": "row",
-             "style": "background: #0a0e27; border-bottom: 1px solid #1e2640; padding: 20px 30px; margin-bottom: 0;"},
+             "style": "background: #0a0e27; border-bottom: 1px solid #1e2640; "
+                      "padding: 20px 30px; margin-bottom: 0;"
+             },
             ui.div(
                 {"class": "col-6"},
                 ui.div(
-                    ui.h4("OPTION SCANNER", style="color: #fff; margin: 0; font-weight: 700; letter-spacing: 2px;"),
-                    ui.p("Institutional Grade Analytics",
-                         style="color: #64748b; margin: 5px 0 0 0; font-size: 0.85rem;")
+                    ui.h4(
+                        "Devil Tongues",
+                        style="color: #fff; margin: 0; "
+                              "font-weight: 700; letter-spacing: 2px;"
+                    ),
+                    ui.p(
+                        "Options Chain Analysis with Refinitiv",
+                        style="color: #64748b; margin: 5px 0 0 0; "
+                              "font-size: 0.85rem;"
+                    )
                 )
             ),
             ui.div(
                 {"class": "col-6 text-end"},
                 ui.div(
-                    ui.span("LIVE", style="color: #10b981; font-weight: 600; margin-right: 8px;"),
-                    ui.span("•", style="color: #10b981; margin-right: 8px; font-size: 1.2rem;"),
-                    ui.span(id="timestamp", style="color: #94a3b8; font-size: 0.9rem;")
+                    ui.span(
+                        "Local Time:",
+                        style="color: #10b981; font-weight: 600; "
+                              "margin-right: 8px;"
+                    ),
+                    ui.span(
+                        id="timestamp",
+                        style="color: #94a3b8; font-size: 0.9rem;"
+                    )
                 )
             )
         ),
@@ -43,22 +64,33 @@ app_ui = ui.page_fillable(
 
                 # 参数配置
                 ui.div(
-                    {"class": "panel",
-                     "style": "background: #0f172a; border: 1px solid #1e293b; border-radius: 8px; padding: 24px; margin-bottom: 20px;"},
-                    ui.h6("PARAMETERS",
-                          style="color: #64748b; font-weight: 600; letter-spacing: 1px; margin-bottom: 20px; font-size: 0.75rem;"),
-
+                    {
+                        "class": "panel",
+                        "style": "background: #0f172a; "
+                                 "border: 1px solid #1e293b; "
+                                 "border-radius: 8px; padding: 24px; "
+                                 "margin-bottom: 20px;"
+                    },
+                    ui.h6(
+                        "Data Selection",
+                        style="color: #64748b; font-weight: 600; "
+                              "letter-spacing: 1px; margin-bottom: 20px; "
+                              "font-size: 0.75rem;"
+                    ),
                     ui.div(
                         {"style": "margin-bottom: 20px;"},
-                        ui.tags.label("Underlying Asset",
-                                      style="color: #94a3b8; font-size: 0.85rem; font-weight: 500;"),
+                        ui.tags.label(
+                            "Underlying Asset RIC",
+                            style="color: #94a3b8; font-size: 0.85rem; "
+                                  "font-weight: 500;"
+                        ),
                         ui.input_selectize(
-                            "underlying",
+                            "underlying_ric",
                             None,
                             choices=[
-                                "AAPL.O", "MSFT.O", "TSLA.O", "NVDA.O", "AMZN.O",
-                                "META.O", "GOOGL.O", "NFLX.O", "AMD.O", "INTC.O",
-                                "JPM.N", "GS.N"
+                                "AAPL.O", "MSFT.O", "TSLA.O", "NVDA.O",
+                                "AMZN.O", "META.O", "GOOGL.O", "NFLX.O",
+                                "AMD.O", "INTC.O", "JPM.N", "GS.N"
                             ],
                             selected="MSFT.O",
                             options={"maxItems": 1}
@@ -66,38 +98,68 @@ app_ui = ui.page_fillable(
                     ),
 
                     ui.div(
-                        {"style": "background: #1e293b; padding: 16px; border-radius: 6px; margin-bottom: 20px;"},
+                        {
+                            "style": "background: #1e293b; padding: 16px; "
+                                     "border-radius: 6px; margin-bottom: 20px;"
+                        },
                         ui.div(
-                            ui.tags.label("Strike Range",
-                                          style="color: #94a3b8; font-size: 0.85rem; font-weight: 500; margin-bottom: 12px; display: block;"),
+                            ui.tags.label(
+                                "Strike Range",
+                                style="color: #94a3b8; "
+                                      "font-size: 0.85rem; "
+                                      "font-weight: 500; "
+                                      "margin-bottom: 12px; "
+                                      "display: block;"
+                            ),
                             ui.div(
                                 {"class": "row g-2"},
                                 ui.div(
                                     {"class": "col-6"},
-                                    ui.input_numeric("min_strike", "Min", value=300)
+                                    ui.input_numeric(
+                                        "min_strike", "Min", value=300
+                                    )
                                 ),
                                 ui.div(
                                     {"class": "col-6"},
-                                    ui.input_numeric("max_strike", "Max", value=500)
+                                    ui.input_numeric(
+                                        "max_strike", "Max", value=500
+                                    )
                                 )
                             )
                         )
                     ),
 
                     ui.div(
-                        {"style": "background: #1e293b; padding: 16px; border-radius: 6px; margin-bottom: 24px;"},
+                        {
+                            "style": "background: #1e293b; padding: 16px; "
+                                     "border-radius: 6px; margin-bottom: 24px;"
+                        },
                         ui.div(
-                            ui.tags.label("Expiry Range",
-                                          style="color: #94a3b8; font-size: 0.85rem; font-weight: 500; margin-bottom: 12px; display: block;"),
+                            ui.tags.label(
+                                "Expiry Range",
+                                style="color: #94a3b8; "
+                                      "font-size: 0.85rem; "
+                                      "font-weight: 500; "
+                                      "margin-bottom: 12px; "
+                                      "display: block;"
+                            ),
                             ui.div(
                                 {"class": "row g-2"},
                                 ui.div(
                                     {"class": "col-6"},
-                                    ui.input_date("min_expiry", "From", value="2025-12-06")
+                                    ui.input_date(
+                                        "min_expiry",
+                                        "From",
+                                        value="2025-12-06"
+                                    )
                                 ),
                                 ui.div(
                                     {"class": "col-6"},
-                                    ui.input_date("max_expiry", "To", value="2026-01-31")
+                                    ui.input_date(
+                                        "max_expiry",
+                                        "To",
+                                        value="2026-01-31"
+                                    )
                                 )
                             )
                         )
@@ -107,32 +169,11 @@ app_ui = ui.page_fillable(
                         "fetch_chain",
                         "SCAN OPTIONS",
                         class_="w-100",
-                        style="background: #3b82f6; color: white; border: none; padding: 14px; font-weight: 600; font-size: 0.9rem; letter-spacing: 1px; border-radius: 6px; transition: all 0.2s;"
-                    )
-                ),
-
-                # 市场状态
-                ui.div(
-                    {"class": "panel",
-                     "style": "background: #0f172a; border: 1px solid #1e293b; border-radius: 8px; padding: 20px;"},
-                    ui.h6("MARKET STATUS",
-                          style="color: #64748b; font-weight: 600; letter-spacing: 1px; margin-bottom: 16px; font-size: 0.75rem;"),
-                    ui.div(
-                        ui.div(
-                            {"style": "display: flex; justify-content: space-between; margin-bottom: 12px;"},
-                            ui.span("Session", style="color: #94a3b8; font-size: 0.85rem;"),
-                            ui.span("Active", style="color: #10b981; font-size: 0.85rem; font-weight: 600;")
-                        ),
-                        ui.div(
-                            {"style": "display: flex; justify-content: space-between; margin-bottom: 12px;"},
-                            ui.span("Exchange", style="color: #94a3b8; font-size: 0.85rem;"),
-                            ui.span("OPRA", style="color: #e2e8f0; font-size: 0.85rem; font-weight: 500;")
-                        ),
-                        ui.div(
-                            {"style": "display: flex; justify-content: space-between;"},
-                            ui.span("Data Provider", style="color: #94a3b8; font-size: 0.85rem;"),
-                            ui.span("Refinitiv", style="color: #e2e8f0; font-size: 0.85rem; font-weight: 500;")
-                        )
+                        style="background: #3b82f6; "
+                              "color: white; border: none; padding: 14px; "
+                              "font-weight: 600; font-size: 0.9rem; "
+                              "letter-spacing: 1px; border-radius: 6px; "
+                              "transition: all 0.2s;"
                     )
                 )
             ),
@@ -149,16 +190,34 @@ app_ui = ui.page_fillable(
                     ui.div(
                         {"class": "col-md-4"},
                         ui.div(
-                            {"class": "metric-card",
-                             "style": "background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); border-radius: 8px; padding: 24px; height: 100%;"},
+                            {
+                                "class": "metric-card",
+                                "style": "background: linear-gradient("
+                                         "135deg, #1e40af 0%, #3b82f6 100%); "
+                                         "border-radius: 8px; "
+                                         "padding: 24px; "
+                                         "height: 100%;"
+                            },
                             ui.div(
-                                ui.div("SPOT PRICE",
-                                       style="color: rgba(255,255,255,0.8); font-size: 0.75rem; font-weight: 600; letter-spacing: 1px; margin-bottom: 8px;"),
+                                ui.div(
+                                    "SPOT PRICE",
+                                    style="color: rgba(255,255,255,0.8); "
+                                          "font-size: 0.75rem; "
+                                          "font-weight: 600; "
+                                          "letter-spacing: 1px; "
+                                          "margin-bottom: 8px;"
+                                ),
                                 ui.div(
                                     ui.output_text("spot_price"),
-                                    style="color: white; font-size: 2rem; font-weight: 700; margin-bottom: 4px;"
+                                    style="color: white; font-size: 2rem; "
+                                          "font-weight: 700; "
+                                          "margin-bottom: 4px;"
                                 ),
-                                ui.div("Real-time quote", style="color: rgba(255,255,255,0.7); font-size: 0.8rem;")
+                                ui.div(
+                                    "Real-time quote",
+                                    style="color: rgba(255,255,255,0.7); "
+                                          "font-size: 0.8rem;"
+                                )
                             )
                         )
                     ),
@@ -167,17 +226,13 @@ app_ui = ui.page_fillable(
                     ui.div(
                         {"class": "col-md-4"},
                         ui.div(
-                            {"class": "metric-card",
-                             "style": "background: #0f172a; border: 1px solid #1e293b; border-radius: 8px; padding: 24px; height: 100%;"},
-                            ui.div(
-                                ui.div("CONTRACTS FOUND",
-                                       style="color: #64748b; font-size: 0.75rem; font-weight: 600; letter-spacing: 1px; margin-bottom: 8px;"),
-                                ui.div(
-                                    ui.output_text("contract_count"),
-                                    style="color: #3b82f6; font-size: 2rem; font-weight: 700; margin-bottom: 4px;"
-                                ),
-                                ui.div("Active options", style="color: #64748b; font-size: 0.8rem;")
-                            )
+                            {
+                                "class": "metric-card",
+                                "style": "background: #0f172a; "
+                                         "border: 1px solid #1e293b; "
+                                         "border-radius: 8px; "
+                                         "padding: 24px; height: 100%;"
+                            }
                         )
                     ),
 
@@ -185,16 +240,28 @@ app_ui = ui.page_fillable(
                     ui.div(
                         {"class": "col-md-4"},
                         ui.div(
-                            {"class": "metric-card",
-                             "style": "background: #0f172a; border: 1px solid #1e293b; border-radius: 8px; padding: 24px; height: 100%;"},
+                            {
+                                "class": "metric-card",
+                                "style": "background: #0f172a; "
+                                         "border: 1px solid #1e293b; "
+                                         "border-radius: 8px; "
+                                         "padding: 24px; height: 100%;"
+                            },
                             ui.div(
-                                ui.div("EXPIRY RANGE",
-                                       style="color: #64748b; font-size: 0.75rem; font-weight: 600; letter-spacing: 1px; margin-bottom: 8px;"),
+                                ui.div(
+                                    "EXPIRY RANGE",
+                                    style="color: #64748b; "
+                                          "font-size: 0.75rem; "
+                                          "font-weight: 600; "
+                                          "letter-spacing: 1px; "
+                                          "margin-bottom: 8px;"
+                                ),
                                 ui.div(
                                     ui.output_text("expiry_info"),
-                                    style="color: #10b981; font-size: 1.4rem; font-weight: 700; margin-bottom: 4px;"
-                                ),
-                                ui.div("Days to expiration", style="color: #64748b; font-size: 0.8rem;")
+                                    style="color: #10b981; font-size: 1.4rem; "
+                                          "font-weight: 700; "
+                                          "margin-bottom: 4px;"
+                                )
                             )
                         )
                     )
@@ -377,7 +444,7 @@ def server(input, output, session):
     @reactive.event(input.fetch_chain)
     def fetch_all_data():
         try:
-            ric = input.underlying()
+            ric = input.underlying_ric()
             print(f"Fetching data for {ric}...")
 
             # Fetch spot price
@@ -582,7 +649,7 @@ def server(input, output, session):
                           style="color: #64748b; text-align: center; padding: 40px;")
 
         try:
-            ric = input.underlying()
+            ric = input.underlying_ric()
             spot_price = spot
 
             # Calculate metrics
@@ -726,7 +793,7 @@ def server(input, output, session):
 
     @reactive.event(input.fetch_chain)
     def strikes_and_expiries():
-        ric = input.underlying()
+        ric = input.underlying_ric()
         min_strike = input.min_strike()
         max_strike = input.max_strike()
         min_expiry = input.min_expiry()
@@ -753,3 +820,4 @@ def server(input, output, session):
 
 
 app = App(app_ui, server)
+app.run()
