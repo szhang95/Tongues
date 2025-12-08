@@ -1,0 +1,83 @@
+* {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+body {
+    background: #020617;
+    color: #e2e8f0;
+}
+.container-fluid {
+    padding: 0;
+}
+input, select, .selectize-input {
+    background: #1e293b !important;
+    border: 1px solid #334155 !important;
+    color: #e2e8f0 !important;
+    border-radius: 6px !important;
+    font-size: 0.9rem !important;
+}
+input:focus, select:focus, .selectize-input.focus {
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+}
+.selectize-dropdown {
+    background: #1e293b !important;
+    border: 1px solid #334155 !important;
+    border-radius: 6px !important;
+}
+.selectize-dropdown-content .option {
+    color: #e2e8f0 !important;
+    padding: 8px 12px !important;
+}
+.selectize-dropdown-content .option:hover,
+.selectize-dropdown-content .active {
+    background: #334155 !important;
+    color: #fff !important;
+}
+label {
+    color: #94a3b8;
+    font-weight: 500;
+    font-size: 0.85rem;
+    margin-bottom: 8px;
+}
+.btn-primary, button {
+    transition: all 0.2s;
+}
+.btn-primary:hover, button:hover {
+    background: #2563eb !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+.metric-card {
+    transition: transform 0.2s;
+}
+.metric-card:hover {
+    transform: translateY(-2px);
+}
+.panel {
+    transition: border-color 0.2s;
+}
+.panel:hover {
+    border-color: #334155 !important;
+}
+table {
+    color: #e2e8f0 !important;
+}
+table thead th {
+    background: #1e293b !important;
+    color: #64748b !important;
+    font-weight: 600 !important;
+    font-size: 0.75rem !important;
+    letter-spacing: 0.5px !important;
+    text-transform: uppercase !important;
+    border-bottom: 2px solid #334155 !important;
+}
+table tbody td {
+    border-bottom: 1px solid #1e293b !important;
+    font-size: 0.9rem !important;
+}
+table tbody tr:hover {
+    background: #1e293b !important;
+}
+.dataframe {
+    background: transparent !important;
+}
