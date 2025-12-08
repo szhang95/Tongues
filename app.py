@@ -1,66 +1,80 @@
-from shiny import App, render, ui
-import pandas as pd
+from shiny import App, render, ui, reactive
 import refinitiv.data as rd
 
 
-# Task for today:
-# Add inputs to this app so that the user can select where they want to hunt
-#   for arb opportunities in the options chain
-# they need to be able to select:
-# 1) Underlying
-# 2) strike price range
-# 3) Expiry date range
+app_ui = ui.page_sidebar(
 
-# You probably also want to add a button called "fetch chain" or something
-# because you don't want the app to try to fetch the options chain for an
-# asset before the user is finished typing out the RIC.
+    ui.sidebar(
+        ui.input_selectize(
+            "underlying",
+            "Underlying RIC",
+            choices=[
+                "AAPL.O", "MSFT.O", "TSLA.O", "NVDA.O", "AMZN.O",
+                "META.O", "GOOGL.O", "NFLX.O", "AMD.O", "INTC.O",
+                "JPM.N", "GS.N"
+            ],
+            selected="MSFT.O",
+            options={"maxItems": 1}
+        ),
 
-# Also add some funcionality that lets the user see where the underlying is
-# trading so that they have a better idea of what strike price range to look at
+        ui.input_numeric("min_strike", "Min Strike", value=300),
+        ui.input_numeric("max_strike", "Max Strike", value=500),
 
-# one SIMPLE way to do that would be to get the most recent stock price,
-# for example:
+        ui.input_date("min_expiry", "Min Expiry", value="2025-12-06"),
+        ui.input_date("max_expiry", "Max Expiry", value="2026-01-31"),
 
-# Get underlying spot
-# underlying_ric = "TSLA.O"
-# spot_df = rd.get_data(underlying_ric, ['TR.PriceClose'])
-# spot = spot_df['Price Close'].iloc[0]
-# print(f"TSLA spot: {spot:.2f}")
+        ui.input_action_button("fetch_chain", "Fetch Option Chain")
+    ),
 
-# ...but a graph of recent prices -- mayube a nice candlestick plot -- would
-# be great :)
-# mplfinance or plotly both will do that for you if you fetch OPEN HIGH LOW
-# CLOSE data
+    ui.h2("Options Arbitrage Scanner"),
 
-# also maybe start thinking about your UI color scheme
-# you can make it cute and pink, you can make it sci-fi, you can make it
-# black and professional finance, whatever you think is best, but you can
-# choose a color scheme with packages like these: https://shiny.posit.co/py/docs/ui-customize.html
+    ui.h4("Underlying Spot Price"),
+    ui.output_text("spot_price"),
 
-
-app_ui = ui.page_fillable(
-    ui.input_text("underlying", "Enter an underlying RIC", value = "MSFT.O"),
+    ui.h4("Options Chain"),
     ui.output_data_frame("strikes_and_expiries")
 )
 
+
 def server(input, output, session):
+
     rd.open_session()
     session.on_ended(rd.close_session)
 
+    @render.text
+    @reactive.event(input.fetch_chain)
+    def spot_price():
+        ric = input.underlying()
+        spot_df = rd.get_data(ric, ['TR.PriceClose'])
+        spot = spot_df['Price Close'].iloc[0]
+        return f"{ric} Spot: {spot:.2f}"
+
     @render.data_frame
+    @reactive.event(input.fetch_chain)
     def strikes_and_expiries():
-        # Create a sample dataframe
-        strikes_and_expiries_df = rd.discovery.search(
-            view=rd.discovery.Views.EQUITY_QUOTES,
-            top=10,
-            filter="( SearchAllCategoryv2 eq 'Options' and "
-                   "(ExpiryDate gt 2025-12-06 and ExpiryDate lt 2026-01-31 and "
-                   "(StrikePrice ge 300 and StrikePrice le 500) and "
-                   "ExchangeName xeq 'OPRA' and "
-                   f"(UnderlyingQuoteRIC eq '{input.underlying()}')))",
-            select="DTSubjectName,AssetState,BusinessEntity,PI,ExchangeName,CallPutOption,StrikePrice,ExpiryDate,RIC,UnderlyingQuoteRIC,UnderlyingIssuerName,ExchangeCode,UnderlyingRCSAssetCategoryLeaf"
+
+        ric = input.underlying()
+        min_strike = input.min_strike()
+        max_strike = input.max_strike()
+        min_expiry = input.min_expiry()
+        max_expiry = input.max_expiry()
+
+        filter_str = (
+            "( SearchAllCategoryv2 eq 'Options' and "
+            f"(ExpiryDate gt {min_expiry} and ExpiryDate lt {max_expiry}) and "
+            f"(StrikePrice ge {min_strike} and StrikePrice le {max_strike}) and "
+            "ExchangeName xeq 'OPRA' and "
+            f"(UnderlyingQuoteRIC eq '{ric}'))"
         )
-        return strikes_and_expiries_df
+
+        df = rd.discovery.search(
+            view=rd.discovery.Views.EQUITY_QUOTES,
+            top=500,
+            filter=filter_str,
+            select="RIC,CallPutOption,StrikePrice,ExpiryDate"
+        )
+
+        return df
 
 
 app = App(app_ui, server)
