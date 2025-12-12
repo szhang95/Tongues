@@ -1,8 +1,9 @@
-fastapi==0.115.*
-uvicorn[standard]==0.30.*
-pandas>=2.0
-numpy>=1.26
-requests>=2.31
-python-dotenv>=1.0
-# 如需 LSEG Eikon 再打开下一行
-# eikon>=1.1
+shiny>=0.6.0
+refinitiv.data>=1.5.0
+pandas>=2.0.0
+numpy>=1.24.0
+plotly>=5.18.0
+scipy>=1.11.0
+ipywidgets
+matplotlib
+types-pytz>=2022.1.1
