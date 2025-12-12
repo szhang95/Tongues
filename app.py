@@ -423,22 +423,38 @@ def server(input, output, session):
                 (K_vals, T_vals), r_vals, (K_grid, T_grid), method='cubic', fill_value=np.nan
             )
 
+            # Convert r to annualized percentage
+            r_grid_pct = r_grid * 100
+
+            # Convert T to days for better readability
+            T_grid_days = T_grid * 365
+
             # Create 3D surface plot
             fig = go.Figure(data=[go.Surface(
                 x=K_grid,
-                y=T_grid,
-                z=r_grid,
+                y=T_grid_days,
+                z=r_grid_pct,
                 colorscale='Viridis',
-                colorbar=dict(title="Implied r")
+                colorbar=dict(title="Implied r, % ann")
             )])
+
+            # Format strike prices as currency on hover
+            fig.update_traces(
+                hovertemplate='<b>Strike:</b> $%{x:.0f}<br>' +
+                              '<b>Days to Expiry:</b> %{y:.1f}<br>' +
+                              '<b>Implied r:</b> %{z:.2f}% ann<br>' +
+                              '<extra></extra>'
+            )
 
             fig.update_layout(
                 title="Implied Risk-Free Rate Surface",
                 scene=dict(
-                    xaxis_title="Strike (K)",
-                    yaxis_title="Time to Expiry (T)",
-                    zaxis_title="Implied r",
-                    camera=dict(eye=dict(x=1.5, y=1.5, z=1.3))
+                    xaxis_title="Strike Price ($)",
+                    yaxis_title="Time to Expiry (Days)",
+                    zaxis_title="Implied r, % ann",
+                    camera=dict(eye=dict(x=1.5, y=1.5, z=1.3)),
+                    xaxis=dict(tickprefix="$"),
+                    zaxis=dict(ticksuffix="%")
                 ),
                 template="plotly_dark",
                 height=600,
