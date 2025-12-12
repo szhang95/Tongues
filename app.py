@@ -148,11 +148,19 @@ app_ui = ui.page_fillable(
                     ui.nav_panel(
                         "Arbitrage Signals",
                         ui.h4("Detected Opportunities", style="margin-top: 20px;"),
+                        ui.div(
+                            ui.output_text("arb_summary"),
+                            style="margin-bottom: 15px; color: #94a3b8;"
+                        ),
                         ui.output_data_frame("arbitrage_table"),
                     ),
                     ui.nav_panel(
                         "Trading Blotter",
                         ui.h4("Trade Execution", style="margin-top: 20px;"),
+                        ui.div(
+                            ui.output_text("blotter_summary"),
+                            style="margin-bottom: 15px; color: #94a3b8;"
+                        ),
                         ui.output_data_frame("blotter_table"),
                         ui.div(
                             {"style": "margin-top: 20px;"},
@@ -282,6 +290,13 @@ def server(input, output, session):
         # Update exchange time after successful fetch
         exchange_time_data.set(fetch_time.strftime("%Y-%m-%d %H:%M:%S"))
 
+    @render.text
+    def arb_summary():
+        df = arbitrage_data.get()
+        if df is None or df.empty:
+            return "No arbitrage opportunities detected."
+        return f"Found {len(df)} arbitrage opportunities across {df['K'].nunique()} strikes"
+
     @render.data_frame
     def options_table():
         df = option_data.get()
@@ -309,14 +324,14 @@ def server(input, output, session):
             trade = {
                 "Timestamp": timestamp,
                 "Underlying": input.underlying_ric(),
-                "Strike": row["K"],
-                "Expiry": row["ExpiryDate"].strftime("%Y-%m-%d"),
-                "T": f"{row['T']:.3f}",
                 "Strategy": row["signal"],
-                "Implied_r": f"{row['implied_r']:.4f}",
-                "r_diff": f"{row['r_diff']:.4f}",
-                "Call_Mid": f"{row['C_mid']:.2f}",
-                "Put_Mid": f"{row['P_mid']:.2f}",
+                "Strike": f"${row['K']:.0f}",
+                "Expiry": row["ExpiryDate"].strftime("%Y-%m-%d"),
+                "T": f"{row['T']:.4f}",
+                "Implied_r": f"{row['implied_r'] * 100:.2f}%",
+                "r_diff": f"{row['r_diff'] * 100:.2f}%",
+                "Call_Mid": f"${row['C_mid']:.2f}",
+                "Put_Mid": f"${row['P_mid']:.2f}",
             }
             current_blotter.append(trade)
 
@@ -328,14 +343,44 @@ def server(input, output, session):
         req(df is not None)
 
         display_df = df[["K", "T", "ExpiryDate", "signal", "implied_r", "r_diff", "C_mid", "P_mid"]].copy()
-        display_df.columns = ["Strike", "T (years)", "Expiry", "Signal", "Implied r", "r - rf", "Call Mid", "Put Mid"]
+
+        # Format numeric columns for better readability
+        display_df["T"] = display_df["T"].apply(lambda x: f"{x:.4f}")
+        display_df["implied_r"] = display_df["implied_r"].apply(lambda x: f"{x * 100:.2f}%")
+        display_df["r_diff"] = display_df["r_diff"].apply(lambda x: f"{x * 100:.2f}%")
+        display_df["C_mid"] = display_df["C_mid"].apply(lambda x: f"${x:.2f}")
+        display_df["P_mid"] = display_df["P_mid"].apply(lambda x: f"${x:.2f}")
+        display_df["ExpiryDate"] = pd.to_datetime(display_df["ExpiryDate"]).dt.strftime('%Y-%m-%d')
+        display_df["K"] = display_df["K"].apply(lambda x: f"${x:.0f}")
+
+        display_df.columns = ["Strike", "Years to Expiry", "Expiry Date", "Strategy", "Implied Rate", "Rate Diff",
+                              "Call Price", "Put Price"]
         return display_df
+
+    @render.text
+    def blotter_summary():
+        blotter = blotter_data.get()
+        if len(blotter) == 0:
+            return "No trades recorded yet."
+        return f"Total trades: {len(blotter)} | Latest: {blotter[-1]['Timestamp']}"
 
     @render.data_frame
     def blotter_table():
         blotter = blotter_data.get()
         req(len(blotter) > 0)
-        return pd.DataFrame(blotter)
+
+        df = pd.DataFrame(blotter)
+
+        # Reorder columns for better flow
+        column_order = ["Timestamp", "Underlying", "Strategy", "Strike", "Expiry", "T",
+                        "Implied_r", "r_diff", "Call_Mid", "Put_Mid"]
+        df = df[column_order]
+
+        # Rename columns for clarity
+        df.columns = ["Time", "Asset", "Strategy", "Strike", "Expiry", "Years",
+                      "Implied Rate", "Rate Diff", "Call $", "Put $"]
+
+        return df
 
     @reactive.effect
     @reactive.event(input.clear_blotter)
