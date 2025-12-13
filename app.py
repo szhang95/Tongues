@@ -75,7 +75,7 @@ def get_strategy_details(row) -> dict:
     strategy_type = get_strategy_summary(row['signal'])
     r_diff_pct = row['r_diff'] * 100
 
-    if strategy_type == "Reverse Conversion":
+    if strategy_type == "Sell Call+Buy Put+Buy Stock":
         return {
             "type": "Reverse Conversion Arbitrage",
             "summary": "The synthetic stock (long call + short put) is overpriced relative to actual stock.",
@@ -244,21 +244,24 @@ app_ui = ui.page_fillable(
                         ui.output_ui("strategy_details"),
                     ),
                     ui.nav_panel(
-                        "Trading Blotter",
-                        ui.h4("Trade Execution", style="margin-top: 20px;"),
+                        "Execution Calculator",
+                        ui.h4("Calculate Real-World Execution Costs & Returns", style="margin-top: 20px;"),
                         ui.div(
-                            ui.output_text("blotter_summary"),
-                            style="margin-bottom: 15px; color: #94a3b8;"
+                            {"style": "margin-bottom: 20px; color: #94a3b8;"},
+                            ui.output_text("calc_instruction")
                         ),
-                        ui.output_data_frame("blotter_table"),
-                        ui.div(
-                            {"style": "margin-top: 20px;"},
-                            ui.input_action_button("clear_blotter", "Clear Blotter", class_="btn-secondary"),
-                        ),
+                        ui.output_ui("calculator_interface"),
                     ),
                     ui.nav_panel(
                         "3D Surface",
                         ui.h4("Implied Rate Surface (r vs K vs T)", style="margin-top: 20px;"),
+                        ui.div(
+                            {
+                                "style": "background: rgba(251, 191, 36, 0.1); border-left: 4px solid #fbbf24; padding: 12px; margin: 20px 0; border-radius: 4px;"},
+                            ui.p(
+                                "ℹ️ Note: If the 3D surface doesn't appear after clicking 'ANALYZE ARBITRAGE', please click the button again to refresh the visualization.",
+                                style="margin: 0; color: #fcd34d; font-size: 0.9em;")
+                        ),
                         ui.output_ui("surface_plot"),
                     ),
                 ),
@@ -278,8 +281,10 @@ def server(input, output, session):
     option_data = reactive.Value(None)
     surface_data = reactive.Value(None)
     arbitrage_data = reactive.Value(None)
-    blotter_data = reactive.Value([])
     selected_arb_row = reactive.Value(None)
+    calc_contracts = reactive.Value(10)
+    calc_commission = reactive.Value(5.0)
+    calc_slippage = reactive.Value(0.5)
 
     # ---- spot ----
     @reactive.effect
@@ -401,27 +406,6 @@ def server(input, output, session):
         arbitrage_data.set(arb_df)
         selected_arb_row.set(None)  # Reset selection
 
-        # Add to blotter
-        current_blotter = blotter_data.get()
-        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-        for _, row in arb_df.iterrows():
-            trade = {
-                "Timestamp": timestamp,
-                "Asset": input.underlying_ric(),
-                "Strategy": get_strategy_summary(row["signal"]),
-                "Strike": f"${row['K']:.0f}",
-                "Expiry": row["ExpiryDate"].strftime("%Y-%m-%d"),
-                "Years": f"{row['T']:.4f}",
-                "Implied Rate": f"{row['implied_r'] * 100:.2f}%",
-                "Rate Diff": f"{row['r_diff'] * 100:.2f}%",
-                "Call $": f"${row['C_mid']:.2f}",
-                "Put $": f"${row['P_mid']:.2f}",
-            }
-            current_blotter.append(trade)
-
-        blotter_data.set(current_blotter)
-
     @render.data_frame
     def arbitrage_table():
         df = arbitrage_data.get()
@@ -517,33 +501,227 @@ def server(input, output, session):
             )
         )
 
+    # ---- Execution Calculator ----
     @render.text
-    def blotter_summary():
-        blotter = blotter_data.get()
-        if len(blotter) == 0:
-            return "No trades recorded yet."
-        return f"Total trades: {len(blotter)} | Latest: {blotter[-1]['Timestamp']}"
+    def calc_instruction():
+        df = arbitrage_data.get()
+        if df is None or df.empty:
+            return "No arbitrage opportunities available. Run 'ANALYZE ARBITRAGE' first."
+        row_idx = selected_arb_row.get()
+        if row_idx is None:
+            return "Select a strategy from the 'Arbitrage Signals' tab to calculate execution costs."
+        return f"Calculating real-world execution costs for selected strategy"
 
-    @render.data_frame
-    def blotter_table():
-        blotter = blotter_data.get()
-        req(len(blotter) > 0)
-        return pd.DataFrame(blotter)
+    @render.ui
+    def calculator_interface():
+        row_idx = selected_arb_row.get()
+        df = arbitrage_data.get()
+
+        if row_idx is None or df is None or df.empty:
+            return ui.div(
+                {"style": "margin-top: 20px; color: #64748b; text-align: center; padding: 40px;"},
+                ui.h5("No Strategy Selected"),
+                ui.p(
+                    "Please go to the 'Arbitrage Signals' tab and click on a row to select a strategy for calculation.")
+            )
+
+        row = df.iloc[row_idx]
+        strategy_type = get_strategy_summary(row['signal'])
+
+        # Get reactive values
+        contracts = calc_contracts.get()
+        commission = calc_commission.get()
+        slippage_pct = calc_slippage.get()
+
+        # Calculate costs
+        call_cost = row['C_mid'] * contracts * 100
+        put_credit = row['P_mid'] * contracts * 100
+        stock_value = row['S'] * contracts * 100
+        total_commission = commission * 3  # 3 legs
+        slippage_cost = (call_cost + put_credit + stock_value) * (slippage_pct / 100)
+
+        if strategy_type == "Sell Call+Buy Put+Buy Stock":
+            # Reverse Conversion
+            net_credit = call_cost - put_credit
+            total_cost = net_credit + total_commission + slippage_cost
+            stock_position = stock_value
+            net_position = total_cost + stock_position
+            days_to_expiry = row['T'] * 365
+            expected_profit = abs(row['r_diff']) * net_position
+
+            profit_label = "Expected Profit"
+            best_case = expected_profit * 1.3
+            worst_case = expected_profit * 0.7
+        else:
+            # Conversion
+            net_credit = stock_value - row['K'] * contracts * 100 + put_credit - call_cost
+            total_cost = total_commission + slippage_cost
+            net_position = abs(net_credit - total_cost)
+            days_to_expiry = row['T'] * 365
+            expected_profit = abs(row['r_diff']) * net_position
+
+            profit_label = "Expected Profit"
+            best_case = expected_profit * 1.3
+            worst_case = expected_profit * 0.7
+
+        # Calculate returns
+        roi = (expected_profit / net_position * 100) if net_position > 0 else 0
+        annualized_return = (roi * 365 / days_to_expiry) if days_to_expiry > 0 else 0
+        required_margin = net_position * 0.25  # Assume 25% margin requirement
+
+        return ui.div(
+            {"class": "row"},
+            # Left column - Inputs
+            ui.div(
+                {"class": "col-md-4"},
+                ui.div(
+                    {"class": "strategy-detail-card"},
+                    ui.h5("Selected Strategy", style="color: #3b82f6; margin-bottom: 15px;"),
+                    ui.p(f"Type: {strategy_type}", style="color: #e2e8f0; margin: 5px 0;"),
+                    ui.p(f"Strike: ${row['K']:.0f}", style="color: #e2e8f0; margin: 5px 0;"),
+                    ui.p(f"Expiry: {row['ExpiryDate'].strftime('%Y-%m-%d')}", style="color: #e2e8f0; margin: 5px 0;"),
+                    ui.p(f"Days to Expiry: {days_to_expiry:.0f}", style="color: #e2e8f0; margin: 5px 0;"),
+
+                    ui.hr(style="border-color: #334155; margin: 20px 0;"),
+
+                    ui.h5("Input Parameters", style="color: #3b82f6; margin-bottom: 15px;"),
+                    ui.input_numeric("contracts", "Number of Contracts", value=10, min=1, max=1000),
+                    ui.input_numeric("commission_per_leg", "Commission per Leg ($)", value=5.0, min=0, step=0.5),
+                    ui.input_numeric("slippage_pct", "Expected Slippage (%)", value=0.5, min=0, max=5, step=0.1),
+
+                    ui.input_action_button("calculate_btn", "Update Calculation", class_="btn-action w-100",
+                                           style="margin-top: 20px;"),
+                )
+            ),
+
+            # Right column - Results
+            ui.div(
+                {"class": "col-md-8"},
+                ui.div(
+                    {"class": "strategy-detail-card"},
+                    ui.h5("Cost Breakdown", style="color: #3b82f6; margin-bottom: 15px;"),
+                    ui.div(
+                        {"class": "strategy-positions"},
+                        ui.div(
+                            {"style": "display: flex; justify-content: space-between; margin: 8px 0;"},
+                            ui.span("Call Cost:"),
+                            ui.span(f"${call_cost:,.2f}", style="font-weight: 600;")
+                        ),
+                        ui.div(
+                            {"style": "display: flex; justify-content: space-between; margin: 8px 0;"},
+                            ui.span("Put Credit:"),
+                            ui.span(f"${put_credit:,.2f}", style="font-weight: 600; color: #10b981;")
+                        ),
+                        ui.div(
+                            {"style": "display: flex; justify-content: space-between; margin: 8px 0;"},
+                            ui.span("Stock Position:"),
+                            ui.span(f"${stock_value:,.2f}", style="font-weight: 600;")
+                        ),
+                        ui.div(
+                            {"style": "display: flex; justify-content: space-between; margin: 8px 0;"},
+                            ui.span("Total Commission (3 legs):"),
+                            ui.span(f"-${total_commission:,.2f}", style="font-weight: 600; color: #f59e0b;")
+                        ),
+                        ui.div(
+                            {"style": "display: flex; justify-content: space-between; margin: 8px 0;"},
+                            ui.span(f"Slippage ({slippage_pct}%):"),
+                            ui.span(f"-${slippage_cost:,.2f}", style="font-weight: 600; color: #f59e0b;")
+                        ),
+                        ui.hr(style="border-color: #334155; margin: 15px 0;"),
+                        ui.div(
+                            {
+                                "style": "display: flex; justify-content: space-between; margin: 8px 0; font-size: 1.1em;"},
+                            ui.span("Net Position:"),
+                            ui.span(f"${net_position:,.2f}", style="font-weight: 700; color: #3b82f6;")
+                        ),
+                    )
+                ),
+
+                ui.div(
+                    {"class": "strategy-detail-card", "style": "margin-top: 20px;"},
+                    ui.h5("Expected Returns", style="color: #10b981; margin-bottom: 15px;"),
+                    ui.div(
+                        {"class": "strategy-positions"},
+                        ui.div(
+                            {"style": "display: flex; justify-content: space-between; margin: 12px 0;"},
+                            ui.span(profit_label + ":"),
+                            ui.span(f"${expected_profit:,.2f}",
+                                    style="font-weight: 700; color: #10b981; font-size: 1.2em;")
+                        ),
+                        ui.div(
+                            {"style": "display: flex; justify-content: space-between; margin: 8px 0;"},
+                            ui.span("Return on Investment:"),
+                            ui.span(f"{roi:.2f}%", style="font-weight: 600;")
+                        ),
+                        ui.div(
+                            {"style": "display: flex; justify-content: space-between; margin: 8px 0;"},
+                            ui.span("Annualized Return:"),
+                            ui.span(f"{annualized_return:.2f}%", style="font-weight: 600; color: #10b981;")
+                        ),
+                        ui.div(
+                            {"style": "display: flex; justify-content: space-between; margin: 8px 0;"},
+                            ui.span("Required Margin (est.):"),
+                            ui.span(f"${required_margin:,.2f}", style="font-weight: 600;")
+                        ),
+                    )
+                ),
+
+                ui.div(
+                    {"class": "strategy-detail-card", "style": "margin-top: 20px;"},
+                    ui.h5("Scenario Analysis", style="color: #3b82f6; margin-bottom: 15px;"),
+                    ui.div(
+                        {"class": "strategy-positions"},
+                        ui.div(
+                            {"style": "display: flex; justify-content: space-between; margin: 8px 0;"},
+                            ui.span("Best Case (+30%):"),
+                            ui.span(f"${best_case:,.2f}", style="font-weight: 600; color: #10b981;")
+                        ),
+                        ui.div(
+                            {"style": "display: flex; justify-content: space-between; margin: 8px 0;"},
+                            ui.span("Expected Case:"),
+                            ui.span(f"${expected_profit:,.2f}", style="font-weight: 600;")
+                        ),
+                        ui.div(
+                            {"style": "display: flex; justify-content: space-between; margin: 8px 0;"},
+                            ui.span("Worst Case (-30%):"),
+                            ui.span(f"${worst_case:,.2f}", style="font-weight: 600; color: #f59e0b;")
+                        ),
+                        ui.hr(style="border-color: #334155; margin: 15px 0;"),
+                        ui.div(
+                            {"style": "color: #94a3b8; font-size: 0.9em; margin-top: 10px;"},
+                            "Note: These calculations are estimates. Actual execution may vary based on market conditions, liquidity, and timing."
+                        )
+                    )
+                ),
+            )
+        )
 
     @reactive.effect
-    @reactive.event(input.clear_blotter)
-    def _clear_blotter():
-        blotter_data.set([])
+    @reactive.event(input.calculate_btn)
+    def _update_calc_params():
+        calc_contracts.set(input.contracts())
+        calc_commission.set(input.commission_per_leg())
+        calc_slippage.set(input.slippage_pct())
 
     # ---- 3D surface plot ----
     @render.ui
     def surface_plot():
         surf = surface_data.get()
-        req(surf is not None)
-
         arb_df = arbitrage_data.get()
+
+        if surf is None:
+            return ui.div(
+                {"style": "margin-top: 20px; color: #64748b; text-align: center; padding: 40px;"},
+                ui.h5("No Data Available"),
+                ui.p("Please scan options first by clicking 'SCAN OPTIONS' in the left panel.")
+            )
+
         if arb_df is None or arb_df.empty:
-            return ui.div("No arbitrage data available. Click 'ANALYZE ARBITRAGE' first.")
+            return ui.div(
+                {"style": "margin-top: 20px; color: #64748b; text-align: center; padding: 40px;"},
+                ui.h5("No Arbitrage Data"),
+                ui.p("Click 'ANALYZE ARBITRAGE' in the left panel to generate the surface.")
+            )
 
         K_vals = arb_df["K"].values
         T_vals = arb_df["T"].values
