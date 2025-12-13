@@ -608,3 +608,6 @@ def server(input, output, session):
 
 
 app = App(app_ui, server)
+
+if __name__ == "__main__":
+    app.run()
