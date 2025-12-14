@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta
+    name="description"
+    content="DevilTongues setup - run locally with Python and LSEG Workspace/Eikon authentication."
+  />
+  <title>DevilTongues - Run Locally</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet"
+  />
+
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-dark: #1e40af;
+      --accent: #f59e0b;
+      --bg-dark: #0f172a;
+      --bg-card: #1e293b;
+      --card: rgba(255, 255, 255, 0.98);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+      line-height: 1.6;
+      background: linear-gradient(135deg, var(--bg-dark) 0%, var(--bg-card) 100%);
+      min-height: 100vh;
+      color: #111827;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    header, section, footer {
+      background: var(--card);
+      border-radius: 16px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+      padding: 1.75rem;
+      margin-bottom: 1.25rem;
+    }
+
+    h1 { color: var(--primary); font-size: 2rem; margin-bottom: 0.35rem; }
+    .sub { color: #4b5563; margin-bottom: 0.75rem; }
+
+    nav {
+      margin-top: 0.9rem;
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    nav a {
+      text-decoration: none;
+      color: #0f172a;
+      background: #eef2ff;
+      padding: 0.55rem 0.9rem;
+      border-radius: 999px;
+      font-weight: 600;
+    }
+
+    h2 { color: var(--primary); margin-bottom: 0.75rem; font-size: 1.5rem; }
+    p { color: #374151; margin-bottom: 0.9rem; }
+
+    .warn {
+      background: #fef3c7;
+      border-left: 4px solid var(--accent);
+      padding: 1rem 1.1rem;
+      border-radius: 12px;
+      margin-top: 1rem;
+    }
+
+    .code {
+      background: #0b1220;
+      color: #e5e7eb;
+      padding: 1rem 1.1rem;
+      border-radius: 12px;
+      overflow-x: auto;
+      font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      margin: 0.75rem 0 1rem 0;
+      font-size: 0.9rem;
+      line-height: 1.6;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    ol { margin-left: 1.25rem; color: #374151; }
+    li { margin-bottom: 0.6rem; }
+
+    footer { text-align: center; color: #6b7280; }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <header>
+      <h1>Run Locally</h1>
+      <div class="sub">Author: Sunny Zhang, Victoria Li</div>
+
+      <nav>
+        <a href="index.html">Home</a>
+        <a href="overview.html">Overview</a>
+        <a href="screenshots.html">Screenshots</a>
+        <a href="strategy.html">Strategy</a>
+        <a href="run.html">Run Locally</a>
+        <a href="technical.html">Technical</a>
+      </nav>
+    </header>
+
+    <section>
+      <h2>Prerequisites</h2>
+      <div class="warn">
+        <ul style="margin-left: 1.25rem; color: #374151;">
+          <li>Python 3.12</li>
+          <li>LSEG Refinitiv Data API credentials</li>
+          <li>LSEG Workspace or Eikon desktop app running and signed in</li>
+        </ul>
+      </div>
+
+      <h2>Installation</h2>
+      <ol>
+        <li>Clone the repository</li>
+      </ol>
+      <div class="code">
+git clone https://github.com/deviltongues/Tongues.git
+cd Tongues
+      </div>
+
+      <ol start="2">
+        <li>Create and activate a virtual environment</li>
+      </ol>
+      <div class="code">
+python -m venv .venv
+
+# macOS/Linux
+source .venv/bin/activate
+
+# Windows
+# .venv\Scripts\activate
+      </div>
+
+      <ol start="3">
+        <li>Install dependencies</li>
+      </ol>
+      <div class="code">
+pip install -e .
+      </div>
+
+      <h2>Authentication Notes</h2>
+      <p>
+        The application typically uses desktop authentication through Workspace/Eikon. Keep the desktop application
+        running while using DevilTongues and confirm that API access is enabled for your account.
+      </p>
+
+      <h2>Launch</h2>
+      <div class="code">
+shiny run app.py
+      </div>
+
+      <p>
+        By default, the app starts at <code>http://127.0.0.1:8000</code>.
+      </p>
+    </section>
+
+    <footer>
+      © DevilTongues • Author: Sunny Zhang, Victoria Li
+    </footer>
+  </div>
+</body>
+</html>

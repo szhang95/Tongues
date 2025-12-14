@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta
+    name="description"
+    content="DevilTongues strategy - put-call parity and conversion / reverse conversion arbitrage."
+  />
+  <title>DevilTongues - Strategy</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-dark: #1e40af;
+      --accent: #f59e0b;
+      --success: #10b981;
+      --bg-dark: #0f172a;
+      --bg-card: #1e293b;
+      --card: rgba(255, 255, 255, 0.98);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+      line-height: 1.6;
+      background: linear-gradient(135deg, var(--bg-dark) 0%, var(--bg-card) 100%);
+      min-height: 100vh;
+      color: #111827;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    header, section, footer {
+      background: var(--card);
+      border-radius: 16px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+      padding: 1.75rem;
+      margin-bottom: 1.25rem;
+    }
+
+    h1 { color: var(--primary); font-size: 2rem; margin-bottom: 0.35rem; }
+    .sub { color: #4b5563; margin-bottom: 0.75rem; }
+
+    nav {
+      margin-top: 0.9rem;
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    nav a {
+      text-decoration: none;
+      color: #0f172a;
+      background: #eef2ff;
+      padding: 0.55rem 0.9rem;
+      border-radius: 999px;
+      font-weight: 600;
+    }
+
+    h2 { color: var(--primary); margin-bottom: 0.75rem; font-size: 1.5rem; }
+    h3 { color: var(--primary-dark); margin-top: 1.2rem; margin-bottom: 0.5rem; }
+
+    p { color: #374151; margin-bottom: 0.9rem; }
+
+    .math {
+      display: inline-block;
+      font-family: "Times New Roman", serif;
+      font-style: italic;
+      background: #f3f4f6;
+      padding: 0.75rem 1rem;
+      border-radius: 10px;
+      margin: 0.5rem 0 1rem 0;
+    }
+
+    .box {
+      background: #f9fafb;
+      border-radius: 12px;
+      padding: 1.1rem;
+      border: 1px solid #e5e7eb;
+      margin-top: 1rem;
+    }
+
+    .box.success { border-left: 4px solid var(--success); }
+    .box.warn { border-left: 4px solid var(--accent); background: #fef3c7; }
+
+    ol, ul { margin-left: 1.25rem; color: #374151; }
+    li { margin-bottom: 0.6rem; }
+
+    footer { text-align: center; color: #6b7280; }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <header>
+      <h1>Strategy</h1>
+      <div class="sub">Author: Sunny Zhang, Victoria Li</div>
+
+      <nav>
+        <a href="index.html">Home</a>
+        <a href="overview.html">Overview</a>
+        <a href="screenshots.html">Screenshots</a>
+        <a href="strategy.html">Strategy</a>
+        <a href="run.html">Run Locally</a>
+        <a href="technical.html">Technical</a>
+      </nav>
+    </header>
+
+    <section>
+      <h2>Put-Call Parity</h2>
+      <p>
+        DevilTongues relies on deviations from put-call parity, a fundamental no-arbitrage relationship between a call and
+        a put with the same strike and expiration.
+      </p>
+
+      <div class="math">
+        C - P = S - K × e<sup>-rT</sup>
+      </div>
+
+      <ul>
+        <li><strong>C</strong>: call price</li>
+        <li><strong>P</strong>: put price</li>
+        <li><strong>S</strong>: spot price</li>
+        <li><strong>K</strong>: strike</li>
+        <li><strong>r</strong>: risk-free rate</li>
+        <li><strong>T</strong>: time to expiry (years)</li>
+      </ul>
+
+      <h2>Arbitrage Strategies</h2>
+
+      <div class="box success">
+        <h3>Reverse Conversion (Implied Rate &gt; Benchmark)</h3>
+        <p>
+          When the synthetic short stock is overpriced relative to the underlying, the implied rate exceeds the benchmark
+          and a reverse conversion may be attractive.
+        </p>
+        <p><strong>Positions:</strong></p>
+        <ol>
+          <li>Sell call at strike K</li>
+          <li>Buy put at strike K</li>
+          <li>Buy underlying stock</li>
+        </ol>
+      </div>
+
+      <div class="box success">
+        <h3>Conversion (Implied Rate &lt; Benchmark)</h3>
+        <p>
+          When the synthetic long stock is underpriced relative to the underlying, the implied rate is below the benchmark
+          and a conversion may be attractive.
+        </p>
+        <p><strong>Positions:</strong></p>
+        <ol>
+          <li>Buy call at strike K</li>
+          <li>Sell put at strike K</li>
+          <li>Short underlying stock</li>
+        </ol>
+      </div>
+
+      <div class="box warn">
+        <h3>Risk Considerations</h3>
+        <ul>
+          <li>Multi-leg execution risk across options and stock legs</li>
+          <li>Pin risk near expiration when S ≈ K</li>
+          <li>Early assignment risk for American-style short options</li>
+          <li>Dividend effects that can shift parity relationships</li>
+          <li>Transaction costs and slippage that can erase thin margins</li>
+          <li>Margin requirements and financing constraints</li>
+        </ul>
+      </div>
+    </section>
+
+    <footer>
+      © DevilTongues • Author: Sunny Zhang, Victoria Li
+    </footer>
+  </div>
+</body>
+</html>

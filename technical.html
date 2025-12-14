@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta
+    name="description"
+    content="DevilTongues technical details - architecture, data flow, and technology stack."
+  />
+  <title>DevilTongues - Technical</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+
+  <style>
+    :root {
+      --primary: #2563eb;
+      --bg-dark: #0f172a;
+      --bg-card: #1e293b;
+      --card: rgba(255, 255, 255, 0.98);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+      line-height: 1.6;
+      background: linear-gradient(135deg, var(--bg-dark) 0%, var(--bg-card) 100%);
+      min-height: 100vh;
+      color: #111827;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    header, section, footer {
+      background: var(--card);
+      border-radius: 16px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+      padding: 1.75rem;
+      margin-bottom: 1.25rem;
+    }
+
+    h1 { color: var(--primary); font-size: 2rem; margin-bottom: 0.35rem; }
+    .sub { color: #4b5563; margin-bottom: 0.75rem; }
+
+    nav {
+      margin-top: 0.9rem;
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    nav a {
+      text-decoration: none;
+      color: #0f172a;
+      background: #eef2ff;
+      padding: 0.55rem 0.9rem;
+      border-radius: 999px;
+      font-weight: 600;
+    }
+
+    h2 { color: var(--primary); margin-bottom: 0.75rem; font-size: 1.5rem; }
+    p { color: #374151; margin-bottom: 0.9rem; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 0.75rem;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    th, td {
+      padding: 0.9rem;
+      border-bottom: 1px solid #e5e7eb;
+      text-align: left;
+      color: #374151;
+    }
+
+    th {
+      background: #2563eb;
+      color: #ffffff;
+    }
+
+    ul, ol { margin-left: 1.25rem; color: #374151; }
+    li { margin-bottom: 0.6rem; }
+
+    .code {
+      background: #0b1220;
+      color: #e5e7eb;
+      padding: 1rem 1.1rem;
+      border-radius: 12px;
+      overflow-x: auto;
+      margin-top: 0.75rem;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-size: 0.9rem;
+      line-height: 1.6;
+    }
+
+    footer { text-align: center; color: #6b7280; }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <header>
+      <h1>Technical</h1>
+      <div class="sub">Author: Sunny Zhang, Victoria Li</div>
+
+      <nav>
+        <a href="index.html">Home</a>
+        <a href="overview.html">Overview</a>
+        <a href="screenshots.html">Screenshots</a>
+        <a href="strategy.html">Strategy</a>
+        <a href="run.html">Run Locally</a>
+        <a href="technical.html">Technical</a>
+      </nav>
+    </header>
+
+    <section>
+      <h2>Technology Stack</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Component</th>
+            <th>Technology</th>
+            <th>Purpose</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Web Framework</td>
+            <td>Shiny for Python</td>
+            <td>Reactive web application with real-time updates</td>
+          </tr>
+          <tr>
+            <td>Data Provider</td>
+            <td>LSEG Refinitiv Data API</td>
+            <td>Market data connectivity and options chains</td>
+          </tr>
+          <tr>
+            <td>Data Processing</td>
+            <td>Pandas, NumPy</td>
+            <td>Data manipulation and numerical computations</td>
+          </tr>
+          <tr>
+            <td>Visualization</td>
+            <td>Plotly</td>
+            <td>Interactive charts and 3D surfaces</td>
+          </tr>
+          <tr>
+            <td>Scientific Computing</td>
+            <td>SciPy</td>
+            <td>Interpolation and numerical methods</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>High-Level Data Flow</h2>
+      <ol>
+        <li>User configures underlying, strike bounds, expiry bounds, and analysis thresholds.</li>
+        <li>LSEG API retrieves spot and options chain (universe discovery + pricing fields).</li>
+        <li>Data is normalized and mid-prices are computed where appropriate.</li>
+        <li>Calls and puts are paired by strike and expiry for parity calculations.</li>
+        <li>Implied rates are derived and compared to benchmark rate inputs.</li>
+        <li>Signals are generated and shown in tables and plots (including 3D surfaces).</li>
+      </ol>
+
+      <h2>Example Snippet</h2>
+      <div class="code">
+spot_df = rd.get_data("MSFT.O", ["TR.PriceClose"])
+
+options_chain = rd.discovery.search(
+    view=rd.discovery.Views.EQUITY_QUOTES,
+    filter="SearchAllCategoryv2 eq 'Options' and "
+           "StrikePrice ge 400 and StrikePrice le 480 and "
+           "ExchangeName xeq 'OPRA'"
+)
+      </div>
+
+      <h2>Project Structure</h2>
+      <div class="code">
+Tongues/
+├── app.py
+├── index.html
+├── overview.html
+├── screenshots.html
+├── strategy.html
+├── run.html
+├── technical.html
+├── CNAME
+├── screenshots/
+│   ├── ...
+└── src/
+    └── deviltongues/
+        ├── fetch_options.py
+        └── utilities.py
+      </div>
+    </section>
+
+    <footer>
+      © DevilTongues • Author: Sunny Zhang, Victoria Li
+    </footer>
+  </div>
+</body>
+</html>

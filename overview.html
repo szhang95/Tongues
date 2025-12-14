@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta
+    name="description"
+    content="DevilTongues overview - synthetic bond arbitrage detection using put-call parity and LSEG market data."
+  />
+  <title>DevilTongues - Overview</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-dark: #1e40af;
+      --bg-dark: #0f172a;
+      --bg-card: #1e293b;
+      --card: rgba(255, 255, 255, 0.98);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+      line-height: 1.6;
+      background: linear-gradient(135deg, var(--bg-dark) 0%, var(--bg-card) 100%);
+      min-height: 100vh;
+      color: #111827;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    header, section, footer {
+      background: var(--card);
+      border-radius: 16px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+      padding: 1.75rem;
+      margin-bottom: 1.25rem;
+    }
+
+    h1 {
+      color: var(--primary);
+      font-size: 2rem;
+      margin-bottom: 0.35rem;
+    }
+
+    .sub {
+      color: #4b5563;
+      margin-bottom: 0.75rem;
+    }
+
+    nav {
+      margin-top: 0.9rem;
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    nav a {
+      text-decoration: none;
+      color: #0f172a;
+      background: #eef2ff;
+      padding: 0.55rem 0.9rem;
+      border-radius: 999px;
+      font-weight: 600;
+    }
+
+    h2 {
+      color: var(--primary);
+      margin-bottom: 0.75rem;
+      font-size: 1.5rem;
+    }
+
+    p {
+      color: #374151;
+      margin-bottom: 0.9rem;
+    }
+
+    ul {
+      margin-left: 1.25rem;
+      margin-top: 0.25rem;
+      color: #374151;
+    }
+
+    li {
+      margin-bottom: 0.6rem;
+    }
+
+    .info {
+      background: #dbeafe;
+      border-left: 4px solid var(--primary);
+      padding: 1rem 1.1rem;
+      border-radius: 12px;
+      margin-top: 1rem;
+    }
+
+    footer {
+      text-align: center;
+      color: #6b7280;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <header>
+      <h1>Overview</h1>
+      <div class="sub">Author: Sunny Zhang, Victoria Li</div>
+
+      <nav>
+        <a href="index.html">Home</a>
+        <a href="overview.html">Overview</a>
+        <a href="screenshots.html">Screenshots</a>
+        <a href="strategy.html">Strategy</a>
+        <a href="run.html">Run Locally</a>
+        <a href="technical.html">Technical</a>
+      </nav>
+    </header>
+
+    <section>
+      <h2>What DevilTongues Does</h2>
+      <p>
+        DevilTongues is a research and educational analytics platform that detects synthetic bond arbitrage opportunities
+        via real-time put-call parity analysis. It connects to LSEG Refinitiv market data to retrieve equity quotes and
+        options chains, then computes implied risk-free rates and highlights conversion and reverse-conversion signals.
+      </p>
+
+      <div class="info">
+        <strong>Key idea:</strong>
+        Synthetic bond (or synthetic stock) positions built from options can be mispriced relative to the underlying.
+        When the implied rate deviates from a benchmark beyond a threshold, arbitrage opportunities may exist.
+      </div>
+
+      <h2>Key Features</h2>
+      <ul>
+        <li><strong>Real-time market data</strong> via LSEG Refinitiv Data API (spot + options chain).</li>
+        <li><strong>Implied rate computation</strong> from put-call parity across strikes and expiries.</li>
+        <li><strong>Signal detection</strong> with configurable thresholds and ranking.</li>
+        <li><strong>Strategy breakdown</strong> with positions, risks, and cost modeling.</li>
+        <li><strong>Visualization</strong> including 3D surface plots for term structures.</li>
+      </ul>
+
+      <h2>Data Sources</h2>
+      <p>
+        The platform uses enterprise-grade market data infrastructure provided by LSEG Refinitiv. Typical fields include
+        spot quotes (e.g., <code>TR.PriceClose</code>) and options pricing fields (e.g., <code>CF_BID</code>,
+        <code>CF_ASK</code>, <code>CF_LAST</code>).
+      </p>
+    </section>
+
+    <footer>
+      © DevilTongues • Author: Sunny Zhang, Victoria Li
+    </footer>
+  </div>
+</body>
+</html>
