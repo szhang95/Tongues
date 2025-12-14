@@ -3,7 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="DevilTongues - Real-time synthetic bond arbitrage detection platform using LSEG data and put-call parity analysis">
+    <meta name="keywords" content="arbitrage, options trading, synthetic bonds, put-call parity, quantitative finance">
     <title>DevilTongues - Synthetic Bond Arbitrage Platform</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -11,11 +16,23 @@
             box-sizing: border-box;
         }
 
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1e40af;
+            --primary-light: #60a5fa;
+            --accent: #f59e0b;
+            --success: #10b981;
+            --bg-dark: #0f172a;
+            --bg-card: #1e293b;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+        }
+
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             line-height: 1.6;
-            color: #333;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #1f2937;
+            background: linear-gradient(135deg, var(--bg-dark) 0%, var(--bg-card) 100%);
             min-height: 100vh;
         }
 
@@ -26,177 +43,244 @@
         }
 
         header {
-            background: rgba(255, 255, 255, 0.95);
-            padding: 2rem;
-            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.98);
+            padding: 3rem 2rem;
+            border-radius: 16px;
             margin-bottom: 2rem;
             box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            text-align: center;
         }
 
         h1 {
-            color: #667eea;
-            font-size: 2.5rem;
+            font-size: 3rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
             margin-bottom: 0.5rem;
+            letter-spacing: -0.02em;
         }
 
         .tagline {
-            color: #666;
-            font-size: 1.2rem;
-            margin-bottom: 1rem;
+            color: #6b7280;
+            font-size: 1.25rem;
+            margin-bottom: 1.5rem;
+            font-weight: 400;
+        }
+
+        .badge-container {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
         }
 
         .badge {
             display: inline-block;
-            padding: 0.3rem 0.8rem;
-            background: #667eea;
+            padding: 0.4rem 1rem;
+            background: var(--primary);
             color: white;
             border-radius: 20px;
-            font-size: 0.85rem;
-            margin-right: 0.5rem;
+            font-size: 0.875rem;
+            font-weight: 500;
         }
 
         .content-section {
             background: white;
-            padding: 2rem;
-            border-radius: 12px;
+            padding: 2.5rem;
+            border-radius: 16px;
             margin-bottom: 2rem;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.08);
         }
 
         h2 {
-            color: #667eea;
-            margin-bottom: 1rem;
-            font-size: 1.8rem;
+            color: var(--primary);
+            margin-bottom: 1.5rem;
+            font-size: 2rem;
+            font-weight: 700;
+            border-bottom: 3px solid var(--primary-light);
+            padding-bottom: 0.5rem;
         }
 
         h3 {
-            color: #764ba2;
-            margin-top: 1.5rem;
-            margin-bottom: 0.8rem;
-            font-size: 1.3rem;
+            color: var(--primary-dark);
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        h4 {
+            color: var(--primary);
+            margin-bottom: 0.75rem;
+            font-size: 1.125rem;
+            font-weight: 600;
+        }
+
+        p {
+            margin-bottom: 1rem;
+            color: #4b5563;
         }
 
         .feature-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 1.5rem;
             margin: 2rem 0;
         }
 
         .feature-card {
-            background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
-            padding: 1.5rem;
-            border-radius: 8px;
-            border-left: 4px solid #667eea;
+            background: linear-gradient(135deg, rgba(37, 99, 235, 0.05) 0%, rgba(30, 64, 175, 0.05) 100%);
+            padding: 2rem;
+            border-radius: 12px;
+            border-left: 4px solid var(--primary);
+            transition: all 0.3s ease;
         }
 
-        .feature-card h4 {
-            color: #667eea;
-            margin-bottom: 0.5rem;
+        .feature-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(37, 99, 235, 0.15);
+        }
+
+        .screenshot-container {
+            margin: 2rem 0;
+            background: #f9fafb;
+            padding: 1.5rem;
+            border-radius: 12px;
         }
 
         .screenshot {
             width: 100%;
             border-radius: 8px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            margin: 1rem 0;
+            margin-bottom: 1rem;
+            border: 1px solid #e5e7eb;
+        }
+
+        .screenshot-caption {
+            color: #6b7280;
+            font-size: 0.95rem;
+            font-style: italic;
+            text-align: center;
+            margin-top: 0.5rem;
         }
 
         .code-block {
-            background: #1e1e1e;
-            color: #d4d4d4;
+            background: #1e293b;
+            color: #e2e8f0;
             padding: 1.5rem;
             border-radius: 8px;
             overflow-x: auto;
-            margin: 1rem 0;
-            font-family: 'Courier New', monospace;
-            font-size: 0.9rem;
+            margin: 1.5rem 0;
+            font-family: 'JetBrains Mono', 'Courier New', monospace;
+            font-size: 0.875rem;
+            line-height: 1.6;
         }
 
         .code-block code {
-            color: #ce9178;
+            color: #fbbf24;
+        }
+
+        .btn-container {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 1.5rem;
+            flex-wrap: wrap;
         }
 
         .btn {
             display: inline-block;
-            padding: 0.8rem 1.5rem;
-            background: #667eea;
+            padding: 1rem 2rem;
+            background: var(--primary);
             color: white;
             text-decoration: none;
-            border-radius: 6px;
-            margin-right: 1rem;
-            margin-top: 1rem;
-            transition: all 0.3s;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            font-size: 1rem;
         }
 
         .btn:hover {
-            background: #5568d3;
+            background: var(--primary-dark);
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 8px 16px rgba(37, 99, 235, 0.3);
         }
 
         .btn-secondary {
-            background: #764ba2;
+            background: var(--accent);
         }
 
         .btn-secondary:hover {
-            background: #653991;
-        }
-
-        .strategy-box {
-            background: #f8f9fa;
-            border-left: 4px solid #764ba2;
-            padding: 1.5rem;
-            margin: 1rem 0;
-            border-radius: 4px;
+            background: #d97706;
         }
 
         .info-box {
-            background: #e3f2fd;
-            border-left: 4px solid #2196f3;
-            padding: 1rem;
-            margin: 1rem 0;
-            border-radius: 4px;
+            background: #dbeafe;
+            border-left: 4px solid var(--primary);
+            padding: 1.25rem;
+            margin: 1.5rem 0;
+            border-radius: 8px;
+        }
+
+        .info-box strong {
+            color: var(--primary-dark);
         }
 
         .warning-box {
-            background: #fff3e0;
-            border-left: 4px solid #ff9800;
-            padding: 1rem;
-            margin: 1rem 0;
-            border-radius: 4px;
+            background: #fef3c7;
+            border-left: 4px solid var(--accent);
+            padding: 1.25rem;
+            margin: 1.5rem 0;
+            border-radius: 8px;
+        }
+
+        .strategy-box {
+            background: #f9fafb;
+            border-left: 4px solid var(--success);
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            border-radius: 8px;
         }
 
         ul, ol {
             margin-left: 2rem;
-            margin-bottom: 1rem;
+            margin-bottom: 1.5rem;
         }
 
         li {
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.75rem;
+            color: #4b5563;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
-            margin: 1rem 0;
+            margin: 1.5rem 0;
         }
 
         th, td {
-            padding: 0.8rem;
+            padding: 1rem;
             text-align: left;
-            border-bottom: 1px solid #ddd;
+            border-bottom: 1px solid #e5e7eb;
         }
 
         th {
-            background: #667eea;
+            background: var(--primary);
             color: white;
+            font-weight: 600;
+        }
+
+        tr:hover {
+            background: #f9fafb;
         }
 
         footer {
-            background: rgba(255, 255, 255, 0.95);
-            padding: 2rem;
-            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.98);
+            padding: 2.5rem;
+            border-radius: 16px;
             text-align: center;
             margin-top: 2rem;
         }
@@ -204,11 +288,25 @@
         .math {
             font-family: 'Times New Roman', serif;
             font-style: italic;
-            background: #f5f5f5;
-            padding: 0.5rem 1rem;
-            border-radius: 4px;
+            background: #f3f4f6;
+            padding: 0.75rem 1.25rem;
+            border-radius: 6px;
             display: inline-block;
-            margin: 0.5rem 0;
+            margin: 1rem 0;
+            font-size: 1.125rem;
+        }
+
+        .step-number {
+            display: inline-block;
+            width: 2rem;
+            height: 2rem;
+            background: var(--primary);
+            color: white;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 2rem;
+            font-weight: 700;
+            margin-right: 0.5rem;
         }
 
         @media (max-width: 768px) {
@@ -219,6 +317,20 @@
             .feature-grid {
                 grid-template-columns: 1fr;
             }
+
+            .container {
+                padding: 10px;
+            }
+
+            .content-section {
+                padding: 1.5rem;
+            }
+        }
+
+        .highlight {
+            background: #fef3c7;
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
         }
     </style>
 </head>
@@ -227,68 +339,107 @@
         <header>
             <h1>DevilTongues</h1>
             <p class="tagline">Real-Time Synthetic Bond Arbitrage Detection Platform</p>
-            <div>
+            <div class="badge-container">
                 <span class="badge">Python</span>
                 <span class="badge">LSEG Refinitiv</span>
                 <span class="badge">Options Trading</span>
                 <span class="badge">Quantitative Finance</span>
             </div>
-            <div style="margin-top: 1rem;">
-                <a href="https://github.com/deviltongues/Tongues" class="btn">View on GitHub</a>
-                <a href="https://app.deviltongues.website" class="btn btn-secondary">Launch App</a>
+            <div class="btn-container">
+                <a href="https://github.com/deviltongues/Tongues" class="btn" target="_blank">View on GitHub</a>
+                <a href="https://github.com/deviltongues/Tongues#how-to-run-locally" class="btn btn-secondary" target="_blank">Get Started</a>
             </div>
         </header>
 
         <div class="content-section">
             <h2>Overview</h2>
-            <p>DevilTongues is a sophisticated financial analytics platform that identifies arbitrage opportunities in synthetic bonds through real-time put-call parity analysis. By connecting to LSEG market data, the platform calculates implied risk-free rates from options pricing and flags profitable conversion and reverse conversion strategies.</p>
+            <p>DevilTongues is a sophisticated financial analytics platform that identifies arbitrage opportunities in synthetic bonds through real-time put-call parity analysis. By connecting to LSEG Refinitiv's market data, the platform calculates implied risk-free rates from options pricing and flags profitable conversion and reverse conversion strategies.</p>
 
             <div class="info-box">
                 <strong>What are Synthetic Bonds?</strong><br>
                 Synthetic bonds are created by combining options positions to replicate the payoff of holding (or shorting) the underlying stock. When these synthetic positions are mispriced relative to the actual stock, arbitrage opportunities emerge.
             </div>
+
+            <p><strong>This is a research and educational tool.</strong> The platform provides analysis and visualization only - it does not execute trades automatically. Users must run the application locally with their own LSEG credentials.</p>
         </div>
 
         <div class="content-section">
-            <h2>Key Features</h2>
-            <div class="feature-grid">
-                <div class="feature-card">
-                    <h4>Real-Time Data</h4>
-                    <p>Live spot prices and options chains from LSEG Refinitiv with sub-second latency for major equity underlyings.</p>
-                </div>
-                <div class="feature-card">
-                    <h4>Arbitrage Detection</h4>
-                    <p>Automated put-call parity analysis identifying conversion and reverse conversion opportunities with customizable thresholds.</p>
-                </div>
-                <div class="feature-card">
-                    <h4>Strategy Analysis</h4>
-                    <p>Detailed breakdowns of required positions, expected profits, execution costs, and risk assessments for each opportunity.</p>
-                </div>
-                <div class="feature-card">
-                    <h4>3D Visualization</h4>
-                    <p>Interactive surface plots showing implied rate term structures across strike prices and time to expiration.</p>
-                </div>
-                <div class="feature-card">
-                    <h4>Execution Calculator</h4>
-                    <p>Model real-world costs including commissions, slippage, margin requirements with scenario analysis.</p>
-                </div>
-                <div class="feature-card">
-                    <h4>Historical Analysis</h4>
-                    <p>Track implied volatility and rate changes over time to identify persistent mispricing patterns.</p>
-                </div>
+            <h2>Application Screenshots</h2>
+            <p>Here are screenshots of the DevilTongues platform running locally, demonstrating its key features:</p>
+
+            <div class="screenshot-container">
+                <h3>1. Market Data Dashboard</h3>
+                <img src="screenshots/dashboard.png" alt="Market Data Dashboard" class="screenshot" onerror="this.src='https://via.placeholder.com/1200x700/2563eb/ffffff?text=Market+Data+Dashboard+%28Add+Your+Screenshot%29'">
+                <p class="screenshot-caption">The main control panel showing spot price fetching and options chain configuration. Users can select underlyings (AAPL, MSFT, TSLA, etc.), set strike ranges, expiry dates, and maximum number of contracts to analyze.</p>
+            </div>
+
+            <div class="screenshot-container">
+                <h3>2. Options Chain Data</h3>
+                <img src="screenshots/options_chain.png" alt="Options Chain Table" class="screenshot" onerror="this.src='https://via.placeholder.com/1200x700/1e40af/ffffff?text=Options+Chain+Data+%28Add+Your+Screenshot%29'">
+                <p class="screenshot-caption">Real-time options chain data retrieved from LSEG showing RICs, strike prices, expiry dates, and bid-ask-last prices for both calls and puts.</p>
+            </div>
+
+            <div class="screenshot-container">
+                <h3>3. Arbitrage Signals Detection</h3>
+                <img src="screenshots/arbitrage_signals.png" alt="Arbitrage Signals Table" class="screenshot" onerror="this.src='https://via.placeholder.com/1200x700/10b981/ffffff?text=Arbitrage+Signals+%28Add+Your+Screenshot%29'">
+                <p class="screenshot-caption">Detected arbitrage opportunities displaying strike prices, expiry dates, implied rates, rate differentials, and recommended strategies (Conversion vs Reverse Conversion). Interactive table allows sorting and row selection.</p>
+            </div>
+
+            <div class="screenshot-container">
+                <h3>4. Strategy Detail Breakdown</h3>
+                <img src="screenshots/strategy_details.png" alt="Strategy Details View" class="screenshot" onerror="this.src='https://via.placeholder.com/1200x700/f59e0b/ffffff?text=Strategy+Details+%28Add+Your+Screenshot%29'">
+                <p class="screenshot-caption">Detailed analysis of selected opportunities showing exact positions required (buy/sell calls/puts/stock), rationale based on implied vs benchmark rates, expected profit calculations, comprehensive risk assessment, and actionable recommendations.</p>
+            </div>
+
+            <div class="screenshot-container">
+                <h3>5. Execution Cost Calculator</h3>
+                <img src="screenshots/calculator.png" alt="Cost Calculator" class="screenshot" onerror="this.src='https://via.placeholder.com/1200x700/2563eb/ffffff?text=Execution+Calculator+%28Add+Your+Screenshot%29'">
+                <p class="screenshot-caption">Interactive calculator for modeling real-world execution costs. Input number of contracts, commission per leg, and expected slippage percentage to see adjusted returns, ROI, and scenario analysis (best/worst case).</p>
+            </div>
+
+            <div class="info-box">
+                <strong>Note on Screenshots:</strong> To add your own screenshots, create a <code>screenshots/</code> folder in your repository and add PNG files with the names shown above (dashboard.png, options_chain.png, arbitrage_signals.png, strategy_details.png, calculator.png). The webpage will automatically display them.
             </div>
         </div>
 
         <div class="content-section">
-            <h2>Data Sources</h2>
-            <p>The platform leverages LSEG Refinitiv's enterprise-grade financial data infrastructure:</p>
+            <h2>What This Tool Does</h2>
 
-            <h3>LSEG Refinitiv Data API</h3>
+            <h3>Core Functionality</h3>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h4>📊 Real-Time Market Data</h4>
+                    <p>Fetches live spot prices and comprehensive options chains from LSEG Refinitiv Data API for major equity underlyings (AAPL, MSFT, TSLA, NVDA, and more).</p>
+                </div>
+                <div class="feature-card">
+                    <h4>🔍 Arbitrage Detection</h4>
+                    <p>Analyzes put-call parity to identify mispricing opportunities. Calculates implied risk-free rates and compares them against benchmark rates.</p>
+                </div>
+                <div class="feature-card">
+                    <h4>💡 Strategy Analysis</h4>
+                    <p>Provides detailed breakdowns of conversion and reverse conversion strategies with exact positions, profit expectations, and risk assessments.</p>
+                </div>
+                <div class="feature-card">
+                    <h4>💰 Cost Modeling</h4>
+                    <p>Interactive calculator models real-world execution costs including commissions, slippage, and margin requirements with best/worst case scenarios.</p>
+                </div>
+                <div class="feature-card">
+                    <h4>📈 3D Visualization</h4>
+                    <p>Renders interactive 3D surface plots showing implied rate term structures across strike prices and time to expiration.</p>
+                </div>
+                <div class="feature-card">
+                    <h4>⚠️ Risk Assessment</h4>
+                    <p>Flags important execution risks including pin risk, early assignment, dividend impacts, and transaction cost considerations.</p>
+                </div>
+            </div>
+
+            <h3>Data Sources</h3>
+            <p>The platform connects to <strong>LSEG Refinitiv Data API</strong> to retrieve:</p>
             <ul>
-                <li><strong>Equity Quotes:</strong> Real-time spot prices for underlying securities (AAPL, MSFT, TSLA, NVDA, etc.)</li>
+                <li><strong>Equity Quotes:</strong> Real-time spot prices via TR.PriceClose field</li>
                 <li><strong>Options Discovery:</strong> Comprehensive options chain data from OPRA (Options Price Reporting Authority)</li>
-                <li><strong>Pricing Fields:</strong> Bid, Ask, Last, and Settle prices for all listed options contracts</li>
-                <li><strong>Analytics:</strong> Greeks (Delta, Gamma, Vega, Theta) from LSEG's pricing engines</li>
+                <li><strong>Pricing Fields:</strong> CF_BID, CF_ASK, CF_LAST for accurate mid-price calculation</li>
+                <li><strong>Contract Details:</strong> Strike prices, expiry dates, call/put designation, RICs</li>
             </ul>
 
             <div class="code-block">
@@ -314,7 +465,7 @@ options_chain = rd.discovery.search(
                 C - P = S - K × e<sup>-rT</sup>
             </div>
 
-            <p>Where:</p>
+            <p><strong>Where:</strong></p>
             <ul>
                 <li><strong>C</strong> = Call option price</li>
                 <li><strong>P</strong> = Put option price (same strike & expiry)</li>
@@ -335,7 +486,7 @@ options_chain = rd.discovery.search(
                     <li>BUY Put option at strike K</li>
                     <li>BUY underlying stock</li>
                 </ol>
-                <p><strong>Profit:</strong> Collect premium from selling the expensive synthetic, earn arbitrage spread</p>
+                <p><strong>Profit Source:</strong> Collect premium from selling the expensive synthetic (short call + long put combination).</p>
             </div>
 
             <div class="strategy-box">
@@ -347,93 +498,89 @@ options_chain = rd.discovery.search(
                     <li>SELL Put option at strike K</li>
                     <li>SHORT underlying stock</li>
                 </ol>
-                <p><strong>Profit:</strong> Buy cheap synthetic, earn interest on short stock proceeds</p>
+                <p><strong>Profit Source:</strong> Buy cheap synthetic (long call + short put combination), earn interest on short proceeds.</p>
             </div>
 
             <div class="warning-box">
-                <strong>Important Risks:</strong>
-                <ul style="margin-top: 0.5rem;">
+                <strong>⚠️ Important Risks:</strong>
+                <ul style="margin-top: 0.75rem;">
                     <li>Execution risk across 3 simultaneous legs</li>
                     <li>Pin risk at expiration if stock ≈ strike</li>
                     <li>Early assignment on American-style short options</li>
                     <li>Dividend payments affecting put-call parity</li>
                     <li>Transaction costs may erode thin arbitrage margins</li>
+                    <li>Margin requirements for short stock positions</li>
                 </ul>
             </div>
         </div>
 
         <div class="content-section">
-            <h2>Application Screenshots</h2>
-
-            <h3>Market Data Dashboard</h3>
-            <img src="https://via.placeholder.com/1000x600/667eea/ffffff?text=Market+Data+Interface" alt="Market Data Interface" class="screenshot">
-            <p>The main control panel showing spot price fetching and options chain configuration. Users can filter by strike range, expiry dates, and maximum number of contracts to analyze.</p>
-
-            <h3>Arbitrage Signals Detection</h3>
-            <img src="https://via.placeholder.com/1000x600/764ba2/ffffff?text=Arbitrage+Signals+Table" alt="Arbitrage Signals" class="screenshot">
-            <p>Real-time detection of arbitrage opportunities displaying strike prices, expiry dates, implied rates, rate differentials, and recommended strategies. Interactive table allows sorting and filtering.</p>
-
-            <h3>Strategy Detail Breakdown</h3>
-            <img src="https://via.placeholder.com/1000x600/667eea/ffffff?text=Strategy+Details+View" alt="Strategy Details" class="screenshot">
-            <p>Detailed analysis of selected opportunities showing exact positions required, rationale, expected profit calculations, comprehensive risk assessment, and actionable recommendations.</p>
-
-            <h3>Execution Cost Calculator</h3>
-            <img src="https://via.placeholder.com/1000x600/764ba2/ffffff?text=Execution+Calculator" alt="Cost Calculator" class="screenshot">
-            <p>Interactive calculator for modeling real-world execution costs. Input number of contracts, commission per leg, and expected slippage to see adjusted returns with best/worst case scenarios.</p>
-
-            <h3>3D Implied Rate Surface</h3>
-            <img src="https://via.placeholder.com/1000x600/667eea/ffffff?text=3D+Surface+Plot" alt="3D Surface" class="screenshot">
-            <p>Interactive 3D visualization of implied risk-free rates across strike prices and time to expiration. Allows identification of term structure arbitrage opportunities and volatility smile analysis.</p>
-        </div>
-
-        <div class="content-section">
             <h2>How to Run Locally</h2>
 
-            <h3>Prerequisites</h3>
-            <ul>
-                <li>Python 3.12 (3.13 not yet supported by all dependencies)</li>
-                <li>LSEG Refinitiv Data API credentials</li>
-                <li>LSEG Workspace or Eikon desktop application running</li>
-            </ul>
+            <div class="warning-box">
+                <strong>📋 Prerequisites Required:</strong>
+                <ul style="margin-top: 0.75rem;">
+                    <li>Python 3.12 (3.13 not yet supported by all dependencies)</li>
+                    <li>LSEG Refinitiv Data API credentials</li>
+                    <li>LSEG Workspace or Eikon desktop application running and logged in</li>
+                </ul>
+            </div>
 
             <h3>Installation Steps</h3>
 
+            <p><span class="step-number">1</span><strong>Clone the Repository</strong></p>
             <div class="code-block">
-# 1. Clone the repository
 git clone https://github.com/deviltongues/Tongues.git
 cd Tongues
+            </div>
 
-# 2. Create virtual environment
+            <p><span class="step-number">2</span><strong>Create Virtual Environment</strong></p>
+            <div class="code-block">
 python -m venv .venv
 
-# 3. Activate virtual environment
+# Activate virtual environment
 # On Windows:
 .venv\Scripts\activate
+
 # On macOS/Linux:
 source .venv/bin/activate
+            </div>
 
-# 4. Install dependencies
+            <p><span class="step-number">3</span><strong>Install Dependencies</strong></p>
+            <div class="code-block">
 pip install -e .
+            </div>
+            <p>This installs all required packages: shiny, refinitiv.data, pandas, numpy, plotly, scipy</p>
 
-# 5. Launch application
+            <p><span class="step-number">4</span><strong>Configure LSEG Authentication</strong></p>
+            <div class="info-box">
+                The application uses LSEG Workspace desktop authentication. Before running:
+                <ul style="margin-top: 0.5rem;">
+                    <li>Launch LSEG Workspace or Eikon desktop application</li>
+                    <li>Log in with your valid credentials</li>
+                    <li>Verify API access is enabled in your account</li>
+                    <li>Keep the desktop application running while using DevilTongues</li>
+                </ul>
+            </div>
+
+            <p><span class="step-number">5</span><strong>Launch Application</strong></p>
+            <div class="code-block">
 shiny run app.py
             </div>
+            <p>The application will start on <code class="highlight">http://127.0.0.1:8000</code> by default. Open this URL in your web browser.</p>
 
             <h3>First-Time Usage</h3>
             <ol>
-                <li><strong>Fetch Spot Price:</strong> Select underlying (e.g., MSFT.O) and click "FETCH SPOT"</li>
-                <li><strong>Configure Options Chain:</strong> Set strike range (e.g., 400-500), expiry dates, and click "SCAN OPTIONS"</li>
-                <li><strong>Analyze Arbitrage:</strong> Set risk-free rate (e.g., 5.0%), threshold (e.g., 0.5%), and click "ANALYZE ARBITRAGE"</li>
-                <li><strong>Review Results:</strong> Navigate to "Arbitrage Signals" tab, click rows for details, use "Execution Calculator" for cost modeling</li>
+                <li><strong>Fetch Spot Price:</strong> Select an underlying (e.g., MSFT.O) from the dropdown and click "Fetch Spot Price" to retrieve the current stock price.</li>
+                <li><strong>Configure Options Chain:</strong> Set Min/Max Strike prices (e.g., 400-500), Min/Max Expiry dates, and Max Contracts. Click "Scan Options" to retrieve the options chain.</li>
+                <li><strong>Analyze Arbitrage:</strong> Set Risk-Free Rate (e.g., 5.0%) and Arbitrage Threshold (e.g., 0.5%). Click "Analyze Arbitrage" to detect opportunities.</li>
+                <li><strong>Review Results:</strong> Navigate to the "Arbitrage Signals" tab to view detected opportunities. Click on any row to see detailed strategy breakdowns.</li>
+                <li><strong>Calculate Costs:</strong> Use the "Execution Calculator" tab to model real-world costs with your position size, commissions, and expected slippage.</li>
             </ol>
-
-            <div class="info-box">
-                <strong>Note:</strong> The application requires an active LSEG Workspace or Eikon session for authentication. Ensure the desktop application is running and you're logged in before launching.
-            </div>
         </div>
 
         <div class="content-section">
-            <h2>Technical Architecture</h2>
+            <h2>Technical Details</h2>
 
             <h3>Technology Stack</h3>
             <table>
@@ -447,40 +594,48 @@ shiny run app.py
                 <tbody>
                     <tr>
                         <td>Web Framework</td>
-                        <td>Shiny for Python</td>
+                        <td>Shiny for Python ≥0.6.0</td>
                         <td>Reactive web application with real-time updates</td>
                     </tr>
                     <tr>
                         <td>Data Provider</td>
-                        <td>LSEG Refinitiv Data API</td>
+                        <td>LSEG Refinitiv Data API ≥1.5.0</td>
                         <td>Market data connectivity and options chains</td>
                     </tr>
                     <tr>
                         <td>Data Processing</td>
-                        <td>Pandas, NumPy</td>
+                        <td>Pandas ≥2.0.0, NumPy ≥1.24.0</td>
                         <td>Data manipulation and numerical computations</td>
                     </tr>
                     <tr>
                         <td>Visualization</td>
-                        <td>Plotly</td>
+                        <td>Plotly ≥5.18.0</td>
                         <td>Interactive 3D surface plots and charts</td>
                     </tr>
                     <tr>
                         <td>Scientific Computing</td>
-                        <td>SciPy</td>
+                        <td>SciPy ≥1.11.0</td>
                         <td>Surface interpolation and numerical methods</td>
                     </tr>
                 </tbody>
             </table>
 
-            <h3>Data Flow Architecture</h3>
+            <h3>Key Components</h3>
+            <ul>
+                <li><strong>app.py:</strong> Main Shiny application with reactive data flows</li>
+                <li><strong>build_surface_df():</strong> Transforms raw options data, calculates mid-prices and time to expiration</li>
+                <li><strong>analyze_arbitrage():</strong> Core detection logic merging calls/puts, computing implied rates</li>
+                <li><strong>get_strategy_details():</strong> Generates position breakdowns and risk assessments</li>
+            </ul>
+
+            <h3>Data Flow</h3>
             <ol>
-                <li><strong>User Input:</strong> Strike/expiry filters configured in UI</li>
-                <li><strong>API Query:</strong> LSEG Refinitiv API fetches options chain data</li>
+                <li><strong>User Input:</strong> Strike/expiry filters configured in left panel</li>
+                <li><strong>API Query:</strong> LSEG Refinitiv API fetches real-time options chain</li>
                 <li><strong>Processing:</strong> Pandas DataFrames calculate mid-prices, time to expiration</li>
                 <li><strong>Analysis:</strong> Arbitrage engine computes implied rates via put-call parity</li>
                 <li><strong>Detection:</strong> Signal generation when rate differential exceeds threshold</li>
-                <li><strong>Visualization:</strong> Plotly renders interactive tables and 3D surfaces</li>
+                <li><strong>Visualization:</strong> Interactive tables and 3D surface plots rendered</li>
             </ol>
         </div>
 
@@ -490,10 +645,17 @@ shiny run app.py
 Tongues/
 ├── app.py                    # Main Shiny application
 ├── custom.css                # UI styling
-├── pyproject.toml            # Project metadata
-├── requirements.txt          # Python dependencies
+├── pyproject.toml            # Project metadata & dependencies
+├── requirements.txt          # Pip dependencies
 ├── README.md                 # Documentation
-├── index.html                # GitHub Pages site
+├── index.html                # This website
+├── CNAME                     # Custom domain configuration
+├── screenshots/              # Application screenshots
+│   ├── dashboard.png
+│   ├── options_chain.png
+│   ├── arbitrage_signals.png
+│   ├── strategy_details.png
+│   └── calculator.png
 ├── src/
 │   └── deviltongues/
 │       ├── __init__.py
@@ -504,121 +666,30 @@ Tongues/
         </div>
 
         <div class="content-section">
-            <h2>Dependencies</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Package</th>
-                        <th>Version</th>
-                        <th>Purpose</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>shiny</td>
-                        <td>≥0.6.0</td>
-                        <td>Web application framework</td>
-                    </tr>
-                    <tr>
-                        <td>refinitiv.data</td>
-                        <td>≥1.5.0</td>
-                        <td>LSEG market data connectivity</td>
-                    </tr>
-                    <tr>
-                        <td>pandas</td>
-                        <td>≥2.0.0</td>
-                        <td>Data manipulation and analysis</td>
-                    </tr>
-                    <tr>
-                        <td>numpy</td>
-                        <td>≥1.24.0</td>
-                        <td>Numerical computing</td>
-                    </tr>
-                    <tr>
-                        <td>plotly</td>
-                        <td>≥5.18.0</td>
-                        <td>Interactive visualizations</td>
-                    </tr>
-                    <tr>
-                        <td>scipy</td>
-                        <td>≥1.11.0</td>
-                        <td>Scientific computing (interpolation)</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-
-        <div class="content-section">
-            <h2>Development Roadmap</h2>
-
-            <h3>Planned Features</h3>
-            <ul>
-                <li>Multi-leg order execution simulation with realistic fill modeling</li>
-                <li>Historical arbitrage backtesting engine with P&L attribution</li>
-                <li>Real-time push notifications for high-value opportunities</li>
-                <li>Portfolio position tracking and risk management dashboard</li>
-                <li>Integration with execution platforms (Interactive Brokers, TD Ameritrade)</li>
-                <li>Machine learning models for arbitrage opportunity prediction</li>
-                <li>Additional arbitrage strategies (box spreads, butterflies, iron condors)</li>
-            </ul>
-
-            <h3>Known Limitations</h3>
+            <h2>Known Limitations</h2>
             <ul>
                 <li>Requires active LSEG Workspace/Eikon session for authentication</li>
-                <li>Limited to OPRA exchange options (US equities and indices)</li>
-                <li>No automated order execution - analysis and alerts only</li>
-                <li>3D surface visualization requires manual refresh in certain scenarios</li>
+                <li>Limited to OPRA exchange options data (US equities and indices)</li>
+                <li>No automated order execution - analysis and visualization only</li>
+                <li>3D surface visualization may require manual refresh in some scenarios</li>
                 <li>Historical data limited by LSEG API query constraints</li>
             </ul>
         </div>
 
         <div class="content-section">
-            <h2>Contributing</h2>
-            <p>Contributions are welcome! Areas for improvement include:</p>
+            <h2>Contributing & Support</h2>
+
+            <h3>Contributing</h3>
+            <p>Contributions are welcome! Key areas for improvement:</p>
             <ul>
                 <li>Enhanced execution cost models incorporating market microstructure</li>
-                <li>Additional arbitrage strategy detection (calendar spreads, diagonals)</li>
+                <li>Additional arbitrage strategies (box spreads, butterflies, iron condors)</li>
                 <li>Comprehensive backtesting framework with transaction cost modeling</li>
-                <li>Performance optimization for analyzing large options chains (10,000+ contracts)</li>
-                <li>Mobile-responsive UI enhancements</li>
+                <li>Performance optimization for large options chains (10,000+ contracts)</li>
                 <li>Additional data provider integrations (Bloomberg, FactSet)</li>
             </ul>
-            <p>Please submit pull requests or open issues on GitHub.</p>
-        </div>
-
-        <div class="content-section">
-            <h2>License & Contact</h2>
-
-            <h3>License</h3>
-            <p>MIT License - see LICENSE file for details</p>
-
-            <h3>Authors</h3>
-            <p><strong>Jake Vestal</strong> - Duke University<br>
-            Email: jmv13@duke.edu</p>
 
             <h3>Support</h3>
             <ul>
-                <li><strong>GitHub Issues:</strong> <a href="https://github.com/deviltongues/Tongues/issues">Report bugs or request features</a></li>
-                <li><strong>Email:</strong> jmv13@duke.edu</li>
-                <li><strong>Website:</strong> <a href="https://www.deviltongues.website">www.deviltongues.website</a></li>
-            </ul>
-
-            <h3>Acknowledgments</h3>
-            <ul>
-                <li>LSEG Refinitiv for providing market data infrastructure</li>
-                <li>Shiny for Python team for the reactive web framework</li>
-                <li>Duke University Quantitative Finance program</li>
-            </ul>
-        </div>
-
-        <footer>
-            <p>&copy; 2025 DevilTongues. All rights reserved.</p>
-            <p>Last Updated: December 2025</p>
-            <div style="margin-top: 1rem;">
-                <a href="https://github.com/deviltongues/Tongues" class="btn">GitHub Repository</a>
-                <a href="https://app.deviltongues.website" class="btn btn-secondary">Launch Application</a>
-            </div>
-        </footer>
-    </div>
-</body>
-</html>
+                <li><strong>GitHub Repository:</strong> <a href="https://github.com/deviltongues/Tongues">github.com/deviltongues/Tongues</a></li>
+                <li><strong>Issues:</strong> <a href="https://github.com/deviltong
