@@ -132,6 +132,146 @@ def analyze_arbitrage(surface_df: pd.DataFrame, risk_free_rate: float = 0.05, th
     return merged[merged["signal"].notna()]
 
 
+def calculate_execution_costs(row, contracts, commission, slippage_pct, risk_free_rate):
+    """
+    Calculate real execution costs based on selected arbitrage opportunity
+
+    Core Calculation Logic:
+    1. Conversion (Buy Call + Sell Put + Short Stock) - when implied_r < benchmark_r
+       - Initial: Pay for call, receive put premium, receive cash from short stock
+       - Expiry: Position converges to K regardless of stock price
+       - Arbitrage profit = Initial net inflow - K + interest earned on cash
+
+    2. Reverse Conversion (Sell Call + Buy Put + Buy Stock) - when implied_r > benchmark_r
+       - Initial: Receive call premium, pay for put, pay for stock
+       - Expiry: Deliver stock at K regardless of stock price
+       - Arbitrage profit = K - Initial net outflow + interest that should have been earned
+    """
+    multiplier = 100  # Options contract multiplier
+
+    # Extract real data from the arbitrage row
+    strike = row['K']
+    spot = row['S']
+    call_mid = row['C_mid']
+    put_mid = row['P_mid']
+    days_to_expiry = row['T'] * 365
+    T = row['T']  # Time in years
+    implied_rate = row['implied_r']
+    rate_diff = row['r_diff']
+
+    strategy_type = get_strategy_summary(row['signal'])
+
+    # Calculate position values using REAL market data
+    call_value = call_mid * contracts * multiplier
+    put_value = put_mid * contracts * multiplier
+    stock_value = spot * contracts * multiplier
+    strike_value = strike * contracts * multiplier
+
+    # Calculate transaction costs
+    total_commission = commission * 3  # 3 legs
+    total_notional = call_value + put_value + stock_value
+    slippage_cost = total_notional * (slippage_pct / 100)
+    total_costs = total_commission + slippage_cost
+
+    if strategy_type == "Sell Call+Buy Put+Buy Stock":
+        # Reverse Conversion (implied_r > benchmark_r)
+        # Initial cash flows
+        call_credit = call_value  # Receive from selling call
+        put_debit = put_value  # Pay for buying put
+        stock_debit = stock_value  # Pay for buying stock
+
+        option_net = call_credit - put_debit  # Net option cash flow
+        initial_outflow = stock_debit - option_net + total_costs  # Net initial outflow
+
+        # Expiry cash flow: deliver stock at strike
+        expiry_inflow = strike_value
+
+        # At benchmark rate, initial outflow should grow to this amount by expiry
+        expected_outflow_with_interest = initial_outflow * np.exp(risk_free_rate * T)
+
+        # Actual arbitrage profit: expiry inflow - expected outflow
+        net_pnl = expiry_inflow - expected_outflow_with_interest
+
+        # Theoretical arbitrage profit (based on rate differential)
+        # rate_diff = implied_r - benchmark_r
+        # If implied_r > benchmark_r, options imply higher discount rate, lower present value
+        # We profit from this mispricing
+        theoretical_profit = rate_diff * strike_value * T
+
+        # Required margin
+        required_margin = stock_value * 0.5  # 50% for long stock
+
+        # Actual capital employed
+        capital_employed = initial_outflow
+
+    else:  # Conversion (implied_r < benchmark_r)
+        # Initial cash flows
+        call_debit = call_value  # Pay for buying call
+        put_credit = put_value  # Receive from selling put
+        stock_credit = stock_value  # Receive from shorting stock
+
+        option_net = put_credit - call_debit  # Net option cash flow
+        initial_inflow = stock_credit + option_net - total_costs  # Net initial inflow
+
+        # Expiry cash flow: buy back stock at strike
+        expiry_outflow = strike_value
+
+        # At benchmark rate, initial inflow should grow to this amount by expiry
+        expected_inflow_with_interest = initial_inflow * np.exp(risk_free_rate * T)
+
+        # Actual arbitrage profit: expected amount - expiry outflow
+        net_pnl = expected_inflow_with_interest - expiry_outflow
+
+        # Theoretical arbitrage profit (based on rate differential)
+        # rate_diff = implied_r - benchmark_r (negative here)
+        # If implied_r < benchmark_r, synthetic is underpriced
+        theoretical_profit = abs(rate_diff) * strike_value * T
+
+        # Required margin
+        required_margin = stock_value * 1.5  # 150% for short stock
+
+        # Actual capital employed
+        capital_employed = required_margin
+
+    # Return metrics
+    roi = (theoretical_profit / capital_employed * 100) if capital_employed > 0 else 0
+    annualized_return = (roi * 365 / days_to_expiry) if days_to_expiry > 0 else 0
+
+    # Scenario analysis (considering execution risk)
+    best_case = theoretical_profit * 1.3  # Better execution prices
+    worst_case = theoretical_profit * 0.7  # Worse execution or early close
+
+    return {
+        'strategy_type': strategy_type,
+        'strike': strike,
+        'spot': spot,
+        'call_mid': call_mid,
+        'put_mid': put_mid,
+        'call_value': call_value,
+        'put_value': put_value,
+        'stock_value': stock_value,
+        'strike_value': strike_value,
+        'option_net': option_net if strategy_type == "Buy Call+Sell Put+Short Stock" else call_credit - put_debit,
+        'initial_cash': initial_inflow if strategy_type == "Buy Call+Sell Put+Short Stock" else -initial_outflow,
+        'expiry_cash': -expiry_outflow if strategy_type == "Buy Call+Sell Put+Short Stock" else expiry_inflow,
+        'total_commission': total_commission,
+        'slippage_cost': slippage_cost,
+        'total_costs': total_costs,
+        'net_pnl': net_pnl,
+        'theoretical_profit': theoretical_profit,
+        'required_margin': required_margin,
+        'capital_employed': capital_employed,
+        'roi': roi,
+        'annualized_return': annualized_return,
+        'best_case': best_case,
+        'worst_case': worst_case,
+        'days_to_expiry': days_to_expiry,
+        'implied_rate': implied_rate,
+        'rate_diff': rate_diff,
+        'risk_free_rate': risk_free_rate
+    }
+
+
 # ---------- UI ----------
 app_ui = ui.page_fillable(
     ui.include_css("custom.css"),
@@ -282,9 +422,6 @@ def server(input, output, session):
     surface_data = reactive.Value(None)
     arbitrage_data = reactive.Value(None)
     selected_arb_row = reactive.Value(None)
-    calc_contracts = reactive.Value(10)
-    calc_commission = reactive.Value(5.0)
-    calc_slippage = reactive.Value(0.5)
 
     # ---- spot ----
     @reactive.effect
@@ -510,7 +647,7 @@ def server(input, output, session):
         row_idx = selected_arb_row.get()
         if row_idx is None:
             return "Select a strategy from the 'Arbitrage Signals' tab to calculate execution costs."
-        return f"Calculating real-world execution costs for selected strategy"
+        return "Calculating real-world execution costs using live market data"
 
     @render.ui
     def calculator_interface():
@@ -520,67 +657,131 @@ def server(input, output, session):
         if row_idx is None or df is None or df.empty:
             return ui.div(
                 {"style": "margin-top: 20px; color: #64748b; text-align: center; padding: 40px;"},
-                ui.h5("No Strategy Selected"),
+                ui.h5("No Strategy Selected", style="color: #94a3b8; margin-bottom: 15px;"),
                 ui.p(
-                    "Please go to the 'Arbitrage Signals' tab and click on a row to select a strategy for calculation.")
+                    "Please go to the 'Arbitrage Signals' tab and click on a row to select a strategy for calculation.",
+                    style="color: #64748b;"
+                )
             )
 
         row = df.iloc[row_idx]
-        strategy_type = get_strategy_summary(row['signal'])
 
-        # Get reactive values
-        contracts = calc_contracts.get()
-        commission = calc_commission.get()
-        slippage_pct = calc_slippage.get()
+        # Get input parameters with default values
+        contracts = 10
+        commission = 5.0
+        slippage_pct = 0.5
 
-        # Calculate costs
-        call_cost = row['C_mid'] * contracts * 100
-        put_credit = row['P_mid'] * contracts * 100
-        stock_value = row['S'] * contracts * 100
-        total_commission = commission * 3  # 3 legs
-        slippage_cost = (call_cost + put_credit + stock_value) * (slippage_pct / 100)
+        # Try to get user inputs if they exist
+        try:
+            if hasattr(input, 'contracts') and callable(getattr(input, 'contracts', None)):
+                contracts = input.contracts()
+            if hasattr(input, 'commission_per_leg') and callable(getattr(input, 'commission_per_leg', None)):
+                commission = input.commission_per_leg()
+            if hasattr(input, 'slippage_pct') and callable(getattr(input, 'slippage_pct', None)):
+                slippage_pct = input.slippage_pct()
+        except:
+            pass
 
-        if strategy_type == "Sell Call+Buy Put+Buy Stock":
-            # Reverse Conversion
-            net_credit = call_cost - put_credit
-            total_cost = net_credit + total_commission + slippage_cost
-            stock_position = stock_value
-            net_position = total_cost + stock_position
-            days_to_expiry = row['T'] * 365
-            expected_profit = abs(row['r_diff']) * net_position
+        risk_free_rate = input.risk_free_rate() / 100.0
 
-            profit_label = "Expected Profit"
-            best_case = expected_profit * 1.3
-            worst_case = expected_profit * 0.7
-        else:
-            # Conversion
-            net_credit = stock_value - row['K'] * contracts * 100 + put_credit - call_cost
-            total_cost = total_commission + slippage_cost
-            net_position = abs(net_credit - total_cost)
-            days_to_expiry = row['T'] * 365
-            expected_profit = abs(row['r_diff']) * net_position
-
-            profit_label = "Expected Profit"
-            best_case = expected_profit * 1.3
-            worst_case = expected_profit * 0.7
-
-        # Calculate returns
-        roi = (expected_profit / net_position * 100) if net_position > 0 else 0
-        annualized_return = (roi * 365 / days_to_expiry) if days_to_expiry > 0 else 0
-        required_margin = net_position * 0.25  # Assume 25% margin requirement
+        # Calculate using REAL data from selected row
+        results = calculate_execution_costs(row, contracts, commission, slippage_pct, risk_free_rate)
 
         return ui.div(
             {"class": "row"},
-            # Left column - Inputs
+            # Left column - Strategy Info and Inputs
             ui.div(
                 {"class": "col-md-4"},
                 ui.div(
                     {"class": "strategy-detail-card"},
-                    ui.h5("Selected Strategy", style="color: #3b82f6; margin-bottom: 15px;"),
-                    ui.p(f"Type: {strategy_type}", style="color: #e2e8f0; margin: 5px 0;"),
-                    ui.p(f"Strike: ${row['K']:.0f}", style="color: #e2e8f0; margin: 5px 0;"),
-                    ui.p(f"Expiry: {row['ExpiryDate'].strftime('%Y-%m-%d')}", style="color: #e2e8f0; margin: 5px 0;"),
-                    ui.p(f"Days to Expiry: {days_to_expiry:.0f}", style="color: #e2e8f0; margin: 5px 0;"),
+                    ui.h5("Selected Strategy", style="color: #3b82f6; margin-bottom: 10px;"),
+                    ui.div(
+                        {
+                            "style": "background: rgba(59, 130, 246, 0.1); padding: 8px; border-radius: 6px; margin-bottom: 12px;"},
+                        ui.p(f"{results['strategy_type']}",
+                             style="color: #e2e8f0; margin: 0; font-weight: 600; font-size: 0.9em;")
+                    ),
+
+                    ui.h5("Market Data (Live)", style="color: #10b981; margin-bottom: 8px;"),
+                    ui.div(
+                        {
+                            "style": "background: rgba(16, 185, 129, 0.05); padding: 10px; border-radius: 6px; margin-bottom: 12px;"},
+                        ui.div(
+                            {"style": "display: flex; justify-content: space-between; margin: 4px 0;"},
+                            [
+                                ui.span("Strike (K):", style="color: #94a3b8; font-size: 0.85em;"),
+                                ui.span(f"${results['strike']:.2f}", style="color: #10b981; font-weight: 600;")
+                            ]
+                        ),
+                        ui.div(
+                            {"style": "display: flex; justify-content: space-between; margin: 4px 0;"},
+                            [
+                                ui.span("Spot (S):", style="color: #94a3b8; font-size: 0.85em;"),
+                                ui.span(f"${results['spot']:.2f}", style="color: #10b981; font-weight: 600;")
+                            ]
+                        ),
+                        ui.div(
+                            {"style": "display: flex; justify-content: space-between; margin: 4px 0;"},
+                            [
+                                ui.span("Call Mid:", style="color: #94a3b8; font-size: 0.85em;"),
+                                ui.span(f"${results['call_mid']:.3f}", style="color: #10b981; font-weight: 600;")
+                            ]
+                        ),
+                        ui.div(
+                            {"style": "display: flex; justify-content: space-between; margin: 4px 0;"},
+                            [
+                                ui.span("Put Mid:", style="color: #94a3b8; font-size: 0.85em;"),
+                                ui.span(f"${results['put_mid']:.3f}", style="color: #10b981; font-weight: 600;")
+                            ]
+                        ),
+                        ui.div(
+                            {"style": "display: flex; justify-content: space-between; margin: 4px 0;"},
+                            [
+                                ui.span("Days to Expiry:", style="color: #94a3b8; font-size: 0.85em;"),
+                                ui.span(f"{results['days_to_expiry']:.0f} days",
+                                        style="color: #10b981; font-weight: 600;")
+                            ]
+                        ),
+                        ui.div(
+                            {"style": "display: flex; justify-content: space-between; margin: 4px 0;"},
+                            [
+                                ui.span("Time (T):", style="color: #94a3b8; font-size: 0.85em;"),
+                                ui.span(f"{results['days_to_expiry'] / 365:.4f} years",
+                                        style="color: #10b981; font-weight: 600;")
+                            ]
+                        ),
+                    ),
+
+                    ui.h5("Rate Analysis", style="color: #fbbf24; margin-bottom: 8px;"),
+                    ui.div(
+                        {
+                            "style": "background: rgba(251, 191, 36, 0.05); padding: 10px; border-radius: 6px; margin-bottom: 12px;"},
+                        ui.div(
+                            {"style": "display: flex; justify-content: space-between; margin: 4px 0;"},
+                            [
+                                ui.span("Implied Rate:", style="color: #94a3b8; font-size: 0.85em;"),
+                                ui.span(f"{results['implied_rate'] * 100:.2f}%",
+                                        style="color: #fbbf24; font-weight: 600;")
+                            ]
+                        ),
+                        ui.div(
+                            {"style": "display: flex; justify-content: space-between; margin: 4px 0;"},
+                            [
+                                ui.span("Benchmark Rate:", style="color: #94a3b8; font-size: 0.85em;"),
+                                ui.span(f"{results['risk_free_rate'] * 100:.2f}%",
+                                        style="color: #e2e8f0; font-weight: 600;")
+                            ]
+                        ),
+                        ui.div(
+                            {
+                                "style": "display: flex; justify-content: space-between; margin: 8px 0 4px 0; padding-top: 8px; border-top: 1px solid rgba(148, 163, 184, 0.2);"},
+                            [
+                                ui.span("Rate Diff:", style="color: #e2e8f0; font-weight: 600; font-size: 0.9em;"),
+                                ui.span(f"{results['rate_diff'] * 100:.2f}%",
+                                        style=f"color: {'#10b981' if results['rate_diff'] < 0 else '#ef4444'}; font-weight: 700; font-size: 1.1em;")
+                            ]
+                        ),
+                    ),
 
                     ui.hr(style="border-color: #334155; margin: 20px 0;"),
 
@@ -599,69 +800,94 @@ def server(input, output, session):
                 {"class": "col-md-8"},
                 ui.div(
                     {"class": "strategy-detail-card"},
-                    ui.h5("Cost Breakdown", style="color: #3b82f6; margin-bottom: 15px;"),
+                    ui.h5("Position Values (Live Market Data)", style="color: #3b82f6; margin-bottom: 15px;"),
                     ui.div(
                         {"class": "strategy-positions"},
                         ui.div(
                             {"style": "display: flex; justify-content: space-between; margin: 8px 0;"},
-                            ui.span("Call Cost:"),
-                            ui.span(f"${call_cost:,.2f}", style="font-weight: 600;")
+                            ui.span(f"Call Position ({contracts} contracts @ ${results['call_mid']:.2f}):"),
+                            ui.span(f"${results['call_value']:,.2f}", style="font-weight: 600;")
                         ),
                         ui.div(
                             {"style": "display: flex; justify-content: space-between; margin: 8px 0;"},
-                            ui.span("Put Credit:"),
-                            ui.span(f"${put_credit:,.2f}", style="font-weight: 600; color: #10b981;")
+                            ui.span(f"Put Position ({contracts} contracts @ ${results['put_mid']:.2f}):"),
+                            ui.span(f"${results['put_value']:,.2f}", style="font-weight: 600;")
                         ),
                         ui.div(
                             {"style": "display: flex; justify-content: space-between; margin: 8px 0;"},
-                            ui.span("Stock Position:"),
-                            ui.span(f"${stock_value:,.2f}", style="font-weight: 600;")
+                            ui.span(f"Stock Position ({contracts * 100} shares @ ${results['spot']:.2f}):"),
+                            ui.span(f"${results['stock_value']:,.2f}", style="font-weight: 600;")
                         ),
                         ui.div(
                             {"style": "display: flex; justify-content: space-between; margin: 8px 0;"},
                             ui.span("Total Commission (3 legs):"),
-                            ui.span(f"-${total_commission:,.2f}", style="font-weight: 600; color: #f59e0b;")
+                            ui.span(f"-${results['total_commission']:,.2f}", style="font-weight: 600; color: #f59e0b;")
                         ),
                         ui.div(
                             {"style": "display: flex; justify-content: space-between; margin: 8px 0;"},
                             ui.span(f"Slippage ({slippage_pct}%):"),
-                            ui.span(f"-${slippage_cost:,.2f}", style="font-weight: 600; color: #f59e0b;")
+                            ui.span(f"-${results['slippage_cost']:,.2f}", style="font-weight: 600; color: #f59e0b;")
                         ),
                         ui.hr(style="border-color: #334155; margin: 15px 0;"),
                         ui.div(
                             {
                                 "style": "display: flex; justify-content: space-between; margin: 8px 0; font-size: 1.1em;"},
-                            ui.span("Net Position:"),
-                            ui.span(f"${net_position:,.2f}", style="font-weight: 700; color: #3b82f6;")
+                            ui.span("Net P&L at Expiration (After Costs):"),
+                            ui.span(f"${results['net_pnl']:,.2f}",
+                                    style=f"font-weight: 700; color: {'#10b981' if results['net_pnl'] > 0 else '#ef4444'};")
                         ),
                     )
                 ),
 
                 ui.div(
                     {"class": "strategy-detail-card", "style": "margin-top: 20px;"},
-                    ui.h5("Expected Returns", style="color: #10b981; margin-bottom: 15px;"),
+                    ui.h5("Implied Rate Carry (Before Costs))",
+                          style="color: #10b981; margin-bottom: 15px;"),
                     ui.div(
                         {"class": "strategy-positions"},
                         ui.div(
                             {"style": "display: flex; justify-content: space-between; margin: 12px 0;"},
-                            ui.span(profit_label + ":"),
-                            ui.span(f"${expected_profit:,.2f}",
+                            ui.span("Theoretical Arbitrage Profit:"),
+                            ui.span(f"${results['theoretical_profit']:,.2f}",
                                     style="font-weight: 700; color: #10b981; font-size: 1.2em;")
                         ),
                         ui.div(
+                            {"style": "color: #94a3b8; font-size: 0.85em; margin: 8px 0;"},
+                            "This value reflects interest rate mispricing implied by put–call parity."
+                        ),
+                        ui.div(
+                            {"style": "color: #94a3b8; font-size: 0.85em; margin: 4px 0;"},
+                            "It assumes frictionless execution and excludes commissions, slippage, funding, and assignment risk."
+                        ),
+                        ui.div(
+                            {"style": "color: #94a3b8; font-size: 0.85em; margin: 8px 0;"},
+                            f"Formula: |Rate Diff| × Strike Value × Time"
+                        ),
+                        ui.div(
+                            {"style": "color: #94a3b8; font-size: 0.85em; margin: 8px 0;"},
+                            f"= {abs(results['rate_diff']) * 100:.2f}% × ${results['strike_value']:,.0f} × {results['days_to_expiry'] / 365:.4f} years = ${results['theoretical_profit']:,.2f}"
+                        ),
+                        ui.hr(style="border-color: #334155; margin: 15px 0;"),
+                        ui.div(
                             {"style": "display: flex; justify-content: space-between; margin: 8px 0;"},
-                            ui.span("Return on Investment:"),
-                            ui.span(f"{roi:.2f}%", style="font-weight: 600;")
+                            ui.span("Capital Employed:"),
+                            ui.span(f"${results['capital_employed']:,.2f}", style="font-weight: 600;")
+                        ),
+                        ui.div(
+                            {"style": "display: flex; justify-content: space-between; margin: 8px 0;"},
+                            ui.span("Required Margin:"),
+                            ui.span(f"${results['required_margin']:,.2f}", style="font-weight: 600;")
+                        ),
+                        ui.div(
+                            {"style": "display: flex; justify-content: space-between; margin: 8px 0;"},
+                            ui.span("Return on Capital (ROI):"),
+                            ui.span(f"{results['roi']:.2f}%", style="font-weight: 600; color: #3b82f6;")
                         ),
                         ui.div(
                             {"style": "display: flex; justify-content: space-between; margin: 8px 0;"},
                             ui.span("Annualized Return:"),
-                            ui.span(f"{annualized_return:.2f}%", style="font-weight: 600; color: #10b981;")
-                        ),
-                        ui.div(
-                            {"style": "display: flex; justify-content: space-between; margin: 8px 0;"},
-                            ui.span("Required Margin (est.):"),
-                            ui.span(f"${required_margin:,.2f}", style="font-weight: 600;")
+                            ui.span(f"{results['annualized_return']:.2f}%",
+                                    style="font-weight: 600; color: #10b981; font-size: 1.1em;")
                         ),
                     )
                 ),
@@ -674,34 +900,27 @@ def server(input, output, session):
                         ui.div(
                             {"style": "display: flex; justify-content: space-between; margin: 8px 0;"},
                             ui.span("Best Case (+30%):"),
-                            ui.span(f"${best_case:,.2f}", style="font-weight: 600; color: #10b981;")
+                            ui.span(f"${results['best_case']:,.2f}", style="font-weight: 600; color: #10b981;")
                         ),
                         ui.div(
                             {"style": "display: flex; justify-content: space-between; margin: 8px 0;"},
                             ui.span("Expected Case:"),
-                            ui.span(f"${expected_profit:,.2f}", style="font-weight: 600;")
+                            ui.span(f"${results['theoretical_profit']:,.2f}", style="font-weight: 600;")
                         ),
                         ui.div(
                             {"style": "display: flex; justify-content: space-between; margin: 8px 0;"},
                             ui.span("Worst Case (-30%):"),
-                            ui.span(f"${worst_case:,.2f}", style="font-weight: 600; color: #f59e0b;")
+                            ui.span(f"${results['worst_case']:,.2f}", style="font-weight: 600; color: #f59e0b;")
                         ),
                         ui.hr(style="border-color: #334155; margin: 15px 0;"),
                         ui.div(
                             {"style": "color: #94a3b8; font-size: 0.9em; margin-top: 10px;"},
-                            "Note: These calculations are estimates. Actual execution may vary based on market conditions, liquidity, and timing."
+                            "⚠️ Note: These calculations use real-time market data. Actual execution may vary due to market conditions, liquidity, timing, and early assignment risk. As a result, a positive implied rate carry does not necessarily translate into a positive realized P&L once execution costs are considered. "
                         )
                     )
                 ),
             )
         )
-
-    @reactive.effect
-    @reactive.event(input.calculate_btn)
-    def _update_calc_params():
-        calc_contracts.set(input.contracts())
-        calc_commission.set(input.commission_per_leg())
-        calc_slippage.set(input.slippage_pct())
 
     # ---- 3D surface plot ----
     @render.ui
