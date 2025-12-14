@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta
     name="description"
-    content="DevilTongues overview - synthetic bond arbitrage detection using put-call parity and LSEG market data."
+    content="DevilTongues overview walkthrough - how to use Market Data, Analysis, Calculator, and 3D Visualization."
   />
   <title>DevilTongues - Overview</title>
 
@@ -23,6 +23,8 @@
       --bg-dark: #0f172a;
       --bg-card: #1e293b;
       --card: rgba(255, 255, 255, 0.98);
+      --muted: #4b5563;
+      --border: rgba(17, 24, 39, 0.10);
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -56,7 +58,7 @@
     }
 
     .sub {
-      color: #4b5563;
+      color: var(--muted);
       margin-bottom: 0.75rem;
     }
 
@@ -73,41 +75,125 @@
       background: #eef2ff;
       padding: 0.55rem 0.9rem;
       border-radius: 999px;
-      font-weight: 600;
+      font-weight: 700;
+    }
+
+    .intro {
+      color: #374151;
+      font-size: 1.05rem;
+      margin-top: 0.25rem;
+    }
+
+    .toc {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+      margin-top: 1rem;
+    }
+
+    .pill {
+      text-decoration: none;
+      color: #0f172a;
+      background: #eef2ff;
+      padding: 0.55rem 0.9rem;
+      border-radius: 999px;
+      font-weight: 800;
+      border: 1px solid rgba(37, 99, 235, 0.18);
     }
 
     h2 {
       color: var(--primary);
       margin-bottom: 0.75rem;
-      font-size: 1.5rem;
+      font-size: 1.6rem;
+    }
+
+    h3 {
+      color: #111827;
+      margin: 1.25rem 0 0.5rem;
+      font-size: 1.15rem;
     }
 
     p {
       color: #374151;
-      margin-bottom: 0.9rem;
+      margin-bottom: 0.85rem;
     }
 
-    ul {
-      margin-left: 1.25rem;
-      margin-top: 0.25rem;
-      color: #374151;
+    .step-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1rem;
+      margin-top: 0.75rem;
     }
 
-    li {
-      margin-bottom: 0.6rem;
+    .step {
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1rem;
+      background: #ffffff;
     }
 
-    .info {
-      background: #dbeafe;
+    .step-title {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      margin-bottom: 0.35rem;
+      font-weight: 900;
+      color: #111827;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 999px;
+      background: var(--primary);
+      color: #ffffff;
+      font-weight: 900;
+      font-size: 0.9rem;
+    }
+
+    .media {
+      margin-top: 0.75rem;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      background: #0b1220;
+    }
+
+    .media img {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    .caption {
+      color: #cbd5e1;
+      font-size: 0.95rem;
+      padding: 0.75rem 0.9rem;
+      background: #0b1220;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .note {
+      background: #eef2ff;
       border-left: 4px solid var(--primary);
-      padding: 1rem 1.1rem;
+      padding: 0.9rem 1rem;
       border-radius: 12px;
-      margin-top: 1rem;
+      color: #374151;
+      margin-top: 0.75rem;
     }
 
     footer {
       text-align: center;
       color: #6b7280;
+    }
+
+    @media (min-width: 900px) {
+      .step-grid {
+        grid-template-columns: 1fr 1fr;
+      }
     }
   </style>
 </head>
@@ -115,48 +201,206 @@
 <body>
   <div class="container">
     <header>
-      <h1>Overview</h1>
+      <h1>Overview Walkthrough</h1>
       <div class="sub">Author: Sunny Zhang, Victoria Li</div>
 
       <nav>
         <a href="index.html">Home</a>
         <a href="overview.html">Overview</a>
-        <a href="screenshots.html">Screenshots</a>
         <a href="strategy.html">Strategy</a>
         <a href="run.html">Run Locally</a>
         <a href="technical.html">Technical</a>
       </nav>
+
+      <p class="intro">
+        This page walks through the DevilTongues workflow inside the Shiny app: Market Data → Analysis → Execution Calculator → 3D Visualization.
+        Each section below includes the corresponding UI screenshot.
+      </p>
+
+      <div class="toc">
+        <a class="pill" href="#market-data">Market Data</a>
+        <a class="pill" href="#analysis">Analysis</a>
+        <a class="pill" href="#calculator">Execution Calculator</a>
+        <a class="pill" href="#surface">3D Visualization</a>
+      </div>
     </header>
 
-    <section>
-      <h2>What DevilTongues Does</h2>
+    <section id="market-data">
+      <h2>Market Data</h2>
       <p>
-        DevilTongues is a research and educational analytics platform that detects synthetic bond arbitrage opportunities
-        via real-time put-call parity analysis. It connects to LSEG Refinitiv market data to retrieve equity quotes and
-        options chains, then computes implied risk-free rates and highlights conversion and reverse-conversion signals.
+        In the <strong>Market Data</strong> tab, users fetch the live spot price and scan the options chain using LSEG Refinitiv.
       </p>
 
-      <div class="info">
-        <strong>Key idea:</strong>
-        Synthetic bond (or synthetic stock) positions built from options can be mispriced relative to the underlying.
-        When the implied rate deviates from a benchmark beyond a threshold, arbitrage opportunities may exist.
+      <div class="step-grid">
+        <div class="step">
+          <div class="step-title"><span class="badge">1</span> Fetch Spot Price</div>
+          <p>
+            Select an underlying (e.g., MSFT.O) and click <strong>FETCH SPOT PRICE</strong>. The app displays the spot price and
+            the timestamp at the moment the button is clicked.
+          </p>
+          <div class="media">
+            <img
+              src="screenshots/market-data-fetching.png"
+              alt="Market Data Fetching UI"
+              loading="lazy"
+              onerror="this.onerror=null;this.src='https://via.placeholder.com/1200x700/0b1220/ffffff?text=Missing:+screenshots/market-data-fetching.png';"
+            />
+            <div class="caption">Market Data tab showing live spot price retrieval and timestamp.</div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-title"><span class="badge">2</span> Scan Options Chain</div>
+          <p>
+            Configure strike bounds, expiry bounds, and max contracts, then click <strong>SCAN OPTIONS CHAIN</strong>.
+            The app retrieves the options chain and displays the results in a table.
+          </p>
+          <div class="media">
+            <img
+              src="screenshots/option-data.png"
+              alt="Options Chain Table"
+              loading="lazy"
+              onerror="this.onerror=null;this.src='https://via.placeholder.com/1200x700/0b1220/ffffff?text=Missing:+screenshots/option-data.png';"
+            />
+            <div class="caption">Options chain table after scanning contracts from LSEG.</div>
+          </div>
+        </div>
       </div>
 
-      <h2>Key Features</h2>
-      <ul>
-        <li><strong>Real-time market data</strong> via LSEG Refinitiv Data API (spot + options chain).</li>
-        <li><strong>Implied rate computation</strong> from put-call parity across strikes and expiries.</li>
-        <li><strong>Signal detection</strong> with configurable thresholds and ranking.</li>
-        <li><strong>Strategy breakdown</strong> with positions, risks, and cost modeling.</li>
-        <li><strong>Visualization</strong> including 3D surface plots for term structures.</li>
-      </ul>
+      <div class="note">
+        Tip: You must fetch the spot price before scanning the options chain, because the surface and arbitrage logic use the current spot price.
+      </div>
+    </section>
 
-      <h2>Data Sources</h2>
+    <section id="analysis">
+      <h2>Analysis</h2>
       <p>
-        The platform uses enterprise-grade market data infrastructure provided by LSEG Refinitiv. Typical fields include
-        spot quotes (e.g., <code>TR.PriceClose</code>) and options pricing fields (e.g., <code>CF_BID</code>,
-        <code>CF_ASK</code>, <code>CF_LAST</code>).
+        In the <strong>Analysis</strong> tab, the app computes implied risk-free rates via put-call parity and flags mispricings that exceed the threshold.
       </p>
+
+      <div class="step-grid">
+        <div class="step">
+          <div class="step-title"><span class="badge">3</span> Navigator and Controls</div>
+          <p>
+            The Analysis page contains the navigator and analysis parameters. Users set the benchmark risk-free rate and the arbitrage threshold,
+            then click <strong>ANALYZE ARBITRAGE</strong>.
+          </p>
+          <div class="media">
+            <img
+              src="screenshots/arbitrage-navigator.png"
+              alt="Arbitrage Navigator"
+              loading="lazy"
+              onerror="this.onerror=null;this.src='https://via.placeholder.com/1200x700/0b1220/ffffff?text=Missing:+screenshots/arbitrage-navigator.png';"
+            />
+            <div class="caption">Analysis tab navigator and parameter controls.</div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-title"><span class="badge">4</span> Detected Opportunities Table</div>
+          <p>
+            After clicking <strong>ANALYZE ARBITRAGE</strong>, the app generates a table of detected opportunities,
+            including strike, expiry, implied rate, and rate differential.
+          </p>
+          <div class="media">
+            <img
+              src="screenshots/arbitrage-opportunities.png"
+              alt="Arbitrage Opportunities Table"
+              loading="lazy"
+              onerror="this.onerror=null;this.src='https://via.placeholder.com/1200x700/0b1220/ffffff?text=Missing:+screenshots/arbitrage-opportunities.png';"
+            />
+            <div class="caption">Detected arbitrage opportunities after running the analysis.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="step" style="margin-top: 1rem;">
+        <div class="step-title"><span class="badge">5</span> Click a Row to See Strategy Breakdown</div>
+        <p>
+          Selecting any row triggers a detailed breakdown: strategy type (conversion vs reverse conversion), required positions,
+          rationale (implied vs benchmark rate), risk notes, and recommendations for execution.
+        </p>
+        <div class="media">
+          <img
+            src="screenshots/arbitrage-analysis.png"
+            alt="Arbitrage Analysis Detail"
+            loading="lazy"
+            onerror="this.onerror=null;this.src='https://via.placeholder.com/1200x700/0b1220/ffffff?text=Missing:+screenshots/arbitrage-analysis.png';"
+          />
+          <div class="caption">Strategy detail panel generated after selecting a row.</div>
+        </div>
+      </div>
+    </section>
+
+    <section id="calculator">
+      <h2>Execution Calculator</h2>
+      <p>
+        The selected strategy also feeds into the <strong>Execution Calculator</strong>, which models real-world costs and capital usage.
+        Users can adjust contracts, commission per leg, and expected slippage.
+      </p>
+
+      <div class="step-grid">
+        <div class="step">
+          <div class="step-title"><span class="badge">6</span> Selected Strategy → Calculator</div>
+          <p>
+            Once a strategy is selected, the calculator loads the corresponding market inputs (strike, spot, option mid prices, days to expiry)
+            and computes position values, costs, and expected returns.
+          </p>
+          <div class="media">
+            <img
+              src="screenshots/selected-strategy.png"
+              alt="Selected Strategy Calculator"
+              loading="lazy"
+              onerror="this.onerror=null;this.src='https://via.placeholder.com/1200x700/0b1220/ffffff?text=Missing:+screenshots/selected-strategy.png';"
+            />
+            <div class="caption">Calculator view triggered by selecting a strategy from the Analysis table.</div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-title"><span class="badge">7</span> Cost and Scenario Outputs</div>
+          <p>
+            The calculator reports commission, slippage, net P&amp;L, ROI, annualized return, and scenario analysis (best/expected/worst).
+          </p>
+          <div class="media">
+            <img
+              src="screenshots/selected-strategy-continued.png"
+              alt="Selected Strategy Continued"
+              loading="lazy"
+              onerror="this.onerror=null;this.src='https://via.placeholder.com/1200x700/0b1220/ffffff?text=Missing:+screenshots/selected-strategy-continued.png';"
+            />
+            <div class="caption">Cost breakdown and scenario analysis for the selected strategy.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="note">
+        Note: The calculator uses live values (spot, option mid prices) and a simplified slippage model. Real execution may differ due to liquidity, timing, and assignment risk.
+      </div>
+    </section>
+
+    <section id="surface">
+      <h2>3D Visualization</h2>
+      <p>
+        The <strong>3D Visualization</strong> tab plots an implied rate surface across strike and time to expiry,
+        helping users understand how rate mispricing varies across the options chain.
+      </p>
+
+      <div class="step">
+        <div class="media">
+          <img
+            src="screenshots/surface-3d.png"
+            alt="Implied Rate Surface 3D"
+            loading="lazy"
+            onerror="this.onerror=null;this.src='https://via.placeholder.com/1200x700/0b1220/ffffff?text=Missing:+screenshots/surface-3d.png';"
+          />
+          <div class="caption">Implied risk-free rate surface across strike and days to expiry.</div>
+        </div>
+      </div>
+
+      <div class="note">
+        Interpretation: Peaks and valleys indicate where the implied rate deviates most from the benchmark rate, which often aligns with the strongest arbitrage signals.
+      </div>
     </section>
 
     <footer>

@@ -5,14 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta
     name="description"
-    content="DevilTongues - Real-time synthetic bond arbitrage detection platform using LSEG data and put-call parity analysis"
+    content="DevilTongues - Real-time synthetic bond arbitrage detection platform using LSEG data and put-call parity analysis."
   />
-  <meta
-    name="keywords"
-    content="arbitrage, options trading, synthetic bonds, put-call parity, quantitative finance"
-  />
-
-  <title>DevilTongues - Synthetic Bond Arbitrage Platform</title>
+  <title>DevilTongues</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -24,20 +19,12 @@
   <style>
     :root {
       --primary: #2563eb;
-      --primary-dark: #1e40af;
-      --primary-light: #60a5fa;
       --bg-dark: #0f172a;
       --bg-card: #1e293b;
-      --text-primary: #f1f5f9;
-      --text-secondary: #94a3b8;
       --card: rgba(255, 255, 255, 0.98);
     }
 
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
       font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
@@ -53,42 +40,44 @@
       padding: 20px;
     }
 
-    header {
+    header, section, footer {
       background: var(--card);
-      padding: 2.5rem 2rem;
       border-radius: 16px;
-      margin-bottom: 1.5rem;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+      padding: 1.75rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .hero {
       text-align: center;
+      padding: 2.25rem 1.75rem;
     }
 
     h1 {
+      color: var(--primary);
       font-size: 3rem;
-      font-weight: 800;
-      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      margin-bottom: 0.5rem;
+      line-height: 1.1;
+      margin-bottom: 0.75rem;
       letter-spacing: -0.02em;
     }
 
     .tagline {
-      color: #6b7280;
-      font-size: 1.1rem;
+      color: #4b5563;
+      font-size: 1.15rem;
       margin-bottom: 0.75rem;
     }
 
-    .author {
+    .authors {
       color: #374151;
-      font-size: 0.95rem;
-      margin-top: 0.25rem;
+      margin-bottom: 1.25rem;
+      font-weight: 600;
     }
 
     nav {
-      margin-top: 1.25rem;
+      margin-top: 1rem;
       display: flex;
-      justify-content: center;
       gap: 0.75rem;
+      justify-content: center;
       flex-wrap: wrap;
     }
 
@@ -96,94 +85,87 @@
       text-decoration: none;
       color: #0f172a;
       background: #eef2ff;
-      padding: 0.55rem 0.9rem;
+      padding: 0.6rem 1rem;
       border-radius: 999px;
-      font-weight: 600;
-      transition: transform 0.2s ease, background 0.2s ease;
+      font-weight: 700;
     }
 
-    nav a:hover {
-      background: #dbeafe;
-      transform: translateY(-1px);
-    }
-
-    .content {
-      background: var(--card);
-      padding: 2rem;
-      border-radius: 16px;
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    .btn-row {
+      margin-top: 1.25rem;
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      flex-wrap: wrap;
     }
 
     .btn {
       display: inline-block;
-      margin-top: 1.25rem;
-      padding: 0.9rem 1.4rem;
-      background: var(--primary);
-      color: white;
       text-decoration: none;
-      border-radius: 10px;
-      font-weight: 700;
-      transition: transform 0.2s ease, background 0.2s ease;
+      background: var(--primary);
+      color: #ffffff;
+      padding: 0.95rem 1.4rem;
+      border-radius: 12px;
+      font-weight: 800;
     }
 
-    .btn:hover {
-      background: var(--primary-dark);
-      transform: translateY(-1px);
+    .btn.secondary {
+      background: #111827;
+    }
+
+    h2 {
+      color: var(--primary);
+      margin-bottom: 0.75rem;
+      font-size: 1.75rem;
+    }
+
+    p {
+      color: #374151;
+      margin-bottom: 0.9rem;
+      font-size: 1.02rem;
     }
 
     footer {
-      margin-top: 1.5rem;
-      padding: 1.5rem;
-      background: var(--card);
-      border-radius: 16px;
       text-align: center;
       color: #6b7280;
-    }
-
-    @media (max-width: 768px) {
-      h1 {
-        font-size: 2.1rem;
-      }
     }
   </style>
 </head>
 
 <body>
   <div class="container">
-    <header>
+    <header class="hero">
       <h1>DevilTongues</h1>
-      <p class="tagline">Real-Time Synthetic Bond Arbitrage Detection Platform</p>
-      <p class="author">Author: Sunny Zhang, Victoria Li</p>
+      <div class="tagline">Real-Time Synthetic Bond Arbitrage Detection Platform</div>
+      <div class="authors">Author: Sunny Zhang, Victoria Li</div>
 
       <nav>
+        <a href="index.html">Home</a>
         <a href="overview.html">Overview</a>
-        <a href="screenshots.html">Screenshots</a>
         <a href="strategy.html">Strategy</a>
         <a href="run.html">Run Locally</a>
         <a href="technical.html">Technical</a>
       </nav>
 
-      <a
-        class="btn"
-        href="https://github.com/deviltongues/Tongues"
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        View on GitHub
-      </a>
+      <div class="btn-row">
+        <a class="btn" href="https://github.com/deviltongues/Tongues" target="_blank" rel="noreferrer">View on GitHub</a>
+        <a class="btn secondary" href="overview.html">Open Walkthrough</a>
+      </div>
     </header>
 
-    <section class="content">
-      <h2 style="color: #2563eb; margin-bottom: 0.8rem;">Welcome</h2>
-      <p style="color: #374151;">
+    <section>
+      <h2>Welcome</h2>
+      <p>
         DevilTongues identifies arbitrage opportunities in synthetic bonds via real-time put-call parity analysis,
-        powered by LSEG Refinitiv market data. Use the navigation above to explore the platform by category
-        (overview, screenshots, strategy, local setup, and technical details).
+        powered by LSEG Refinitiv market data.
+      </p>
+      <p>
+        Use the navigation above to explore the platform by category (overview walkthrough, strategy explanation,
+        local setup, and technical details).
       </p>
     </section>
 
     <footer>
-      <div>© DevilTongues • Author: Sunny Zhang, Victoria Li</div>
+      © DevilTongues • Author: Sunny Zhang, Victoria Li
     </footer>
   </div>
 </body>
